@@ -1,0 +1,46 @@
+# Build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+publish/
+
+# IDE
+.idea/
+.vs/
+*.user
+*.suo
+*.DotSettings.user
+riderModule.iml
+_ReSharper.Caches/
+
+# Test results and coverage
+TestResults/
+coverage/
+*.trx
+*.coverage
+*.coveragexml
+
+# NuGet
+*.nupkg
+*.snupkg
+/packages/
+
+# Logs and temp
+*.log
+/tmp/
+
+# Local runtime data
+src/EducationSPD.Web/Files/
+
+# Local secrets and overrides
+appsettings.Local.json
+appsettings.*.local.json
+.env
+secrets.json
+
+# Local agent/tooling artifacts
+.claude/
+.codex/
+.cursor/

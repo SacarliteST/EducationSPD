@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EducationSPD.Application\EducationSPD.Application.csproj" />
+    <ProjectReference Include="..\EducationSPD.Domain\EducationSPD.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -58,6 +58,7 @@ public sealed class InboxPersistenceTests(PostgresDatabaseFixture database)
         var secondIds = new List<Guid>();
 
         var firstExecution = firstExecutor.ExecuteReadyBatchAsync(
+            InboxMessageType.SkillCatalogChanged,
             async (messages, _) =>
             {
                 firstIds.AddRange(messages.Select(message => message.EventId));
@@ -71,6 +72,7 @@ public sealed class InboxPersistenceTests(PostgresDatabaseFixture database)
         try
         {
             var secondCount = await secondExecutor.ExecuteReadyBatchAsync(
+                InboxMessageType.SkillCatalogChanged,
                 (messages, _) =>
                 {
                     secondIds.AddRange(messages.Select(message => message.EventId));

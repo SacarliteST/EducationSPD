@@ -9,6 +9,7 @@ public interface IInboxBatchExecutor
     /// Блокирует доступный пакет, выполняет обработчик и атомарно сохраняет изменения.
     /// </summary>
     Task<int> ExecuteReadyBatchAsync(
+        InboxMessageType messageType,
         Func<IReadOnlyList<InboxMessage>, CancellationToken, Task> processBatch,
         CancellationToken cancellationToken);
 }

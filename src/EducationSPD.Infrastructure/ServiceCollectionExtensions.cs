@@ -2,6 +2,7 @@ using EducationSPD.Application.Inbox;
 using EducationSPD.Application.Skills;
 using EducationSPD.Infrastructure.Configuration;
 using EducationSPD.Infrastructure.Inbox;
+using EducationSPD.Infrastructure.Kafka;
 using EducationSPD.Infrastructure.Persistence;
 using EducationSPD.Infrastructure.Persistence.Migrations;
 using EducationSPD.Infrastructure.Skills;
@@ -62,6 +63,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IInboxStore, EfInboxStore>();
         services.AddScoped<IInboxBatchExecutor, EfInboxBatchExecutor>();
         services.AddScoped<ISkillRepository, EfSkillRepository>();
+        services.AddHostedService<SkillCatalogKafkaConsumer>();
+        services.AddHostedService<SkillCatalogInboxProcessor>();
 
         return services;
     }

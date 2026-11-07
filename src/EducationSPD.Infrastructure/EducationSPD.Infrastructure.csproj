@@ -5,7 +5,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Confluent.Kafka" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
   </ItemGroup>
@@ -13,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\EducationSPD.Application\EducationSPD.Application.csproj" />
     <ProjectReference Include="..\EducationSPD.Domain\EducationSPD.Domain.csproj" />
+    <ProjectReference Include="..\EducationSPD.Kafka.Contracts\EducationSPD.Kafka.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

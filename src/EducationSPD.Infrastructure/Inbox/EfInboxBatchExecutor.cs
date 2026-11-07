@@ -24,6 +24,7 @@ internal sealed class EfInboxBatchExecutor : IInboxBatchExecutor
     }
 
     public async Task<int> ExecuteReadyBatchAsync(
+        InboxMessageType messageType,
         Func<IReadOnlyList<InboxMessage>, CancellationToken, Task> processBatch,
         CancellationToken cancellationToken)
     {
@@ -32,11 +33,13 @@ internal sealed class EfInboxBatchExecutor : IInboxBatchExecutor
         var now = timeProvider.GetUtcNow();
         var receivedStatus = (short)InboxStatus.Received;
         var pendingCatalogStatus = (short)InboxStatus.PendingCatalog;
+        var storedMessageType = (short)messageType;
         var messages = await dbContext.InboxMessages
             .FromSqlInterpolated($"""
                 SELECT *
                 FROM "InboxMessages"
-                WHERE status IN ({receivedStatus}, {pendingCatalogStatus})
+                WHERE message_type = {storedMessageType}
+                  AND status IN ({receivedStatus}, {pendingCatalogStatus})
                   AND (next_retry_at IS NULL OR next_retry_at <= {now})
                 ORDER BY received_at, event_id
                 LIMIT {options.BatchSize}

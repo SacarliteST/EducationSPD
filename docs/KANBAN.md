@@ -53,7 +53,7 @@ SPD-021 ─► SQLSPD-001 ─► SQLSPD-002 ─► SQLSPD-003 ─► SQLSPD-004 
 | `SPD-004` | Публичные Kafka-контракты и сериализация | Critical | Done | 001 | EducationSPD |
 | `SPD-005` | Домен и хранение каталога навыков | Critical | Done | 001 | EducationSPD |
 | `SPD-006` | Универсальный durable inbox | Critical | Done | 004, 005 | EducationSPD |
-| `SPD-007` | Consumer каталога навыков | Critical | Backlog | 004, 005, 006 | EducationSPD |
+| `SPD-007` | Consumer каталога навыков | Critical | Done | 004, 005, 006 | EducationSPD |
 | `SPD-008` | Домен и хранение эпизодов и наблюдений | Critical | Backlog | 004, 005 | EducationSPD |
 | `SPD-009` | Consumer финализированных эпизодов | Critical | Backlog | 006, 007, 008 | EducationSPD |
 | `SPD-010` | PendingCatalog и независимая очередь студентов | Critical | Backlog | 009 | EducationSPD |
@@ -215,6 +215,15 @@ metadata. Inbox должен отделять сохранение трансп�
 - soft-delete применяется как состояние, не Kafka tombstone;
 - неизвестная версия становится неисправимой безопасной ошибкой;
 - тест проходит на реальном Kafka broker и PostgreSQL Testcontainers.
+
+**Выполнено 2026-11-07.** Добавлены Kafka consumer с ручным подтверждением
+offset после durable-записи, отдельный транзакционный обработчик inbox и
+application-сценарий обновления каталога. Обработка разделена по типам сообщений,
+дубликат не применяется повторно, старое событие не откатывает проекцию, а удаление
+остаётся soft-delete. Неизвестная версия получает безопасный окончательный код
+`UnsupportedSchemaVersion`. Сквозной integration test использует реальные Kafka и
+PostgreSQL Testcontainers и проверяет состояние inbox до запуска предметного
+обработчика.
 
 ## Итерация C — учебные эпизоды
 

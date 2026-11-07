@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using EducationSPD.Application.Skills;
 
 namespace EducationSPD.Application;
 
@@ -13,6 +14,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddSingleton(TimeProvider.System);
+        services.AddScoped<ISkillCatalogChangeHandler, SkillCatalogChangeHandler>();
 
         return services;
     }

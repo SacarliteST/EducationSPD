@@ -10,6 +10,8 @@ using EducationSPD.Infrastructure.Persistence;
 using EducationSPD.Infrastructure.Persistence.Migrations;
 using EducationSPD.Infrastructure.Skills;
 using EducationSPD.Infrastructure.Models;
+using EducationSPD.Infrastructure.Recommendations;
+using EducationSPD.Application.Recommendations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -73,6 +75,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IModelVersionRepository, EfModelVersionRepository>();
         services.AddScoped<IStudentSkillStateRepository, EfStudentSkillStateRepository>();
         services.AddScoped<IStudentSkillStateReader, EfStudentSkillStateReader>();
+        services.AddScoped<IRecommendationContextReader, EfRecommendationContextReader>();
         services.AddHostedService<SkillCatalogKafkaConsumer>();
         services.AddHostedService<SkillCatalogInboxProcessor>();
         services.AddHostedService<LearningEpisodeKafkaConsumer>();

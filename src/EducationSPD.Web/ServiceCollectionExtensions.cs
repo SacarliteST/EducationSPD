@@ -4,6 +4,8 @@ using EducationSPD.Web.Security;
 using EducationSPD.Web.Features.Skills;
 using EducationSPD.Contracts.Skills;
 using FluentValidation;
+using EducationSPD.Web.Features.Recommendations;
+using EducationSPD.Contracts.Recommendations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -26,6 +28,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<FluentValidationActionFilter>();
         services.AddScoped<ServiceKeyAuthorizationFilter>();
         services.AddScoped<IValidator<GetStudentSkillsRequest>, GetStudentSkillsRequestValidator>();
+        services.AddScoped<IValidator<RankRecommendationsRequest>, RankRecommendationsRequestValidator>();
 
         services.AddOptions<ServiceAuthenticationOptions>()
             .Bind(configuration.GetSection(ServiceAuthenticationOptions.SectionName))

@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using EducationSPD.Application.Episodes;
 using EducationSPD.Application.Skills;
 using EducationSPD.Application.Models;
+using EducationSPD.Application.Recommendations;
 
 namespace EducationSPD.Application;
 
@@ -19,6 +20,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISkillCatalogChangeHandler, SkillCatalogChangeHandler>();
         services.AddScoped<ILearningEpisodeFinalizationHandler, LearningEpisodeFinalizationHandler>();
         services.AddScoped<IStudentSkillsQueryHandler, StudentSkillsQueryHandler>();
+        services.AddScoped<IRecommendationRankingHandler, RecommendationRankingHandler>();
 
         return services;
     }

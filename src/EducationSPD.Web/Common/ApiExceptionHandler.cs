@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using EducationSPD.Application.Recommendations;
 
 namespace EducationSPD.Web.Common;
 
@@ -30,6 +31,23 @@ internal sealed class ApiExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
+        if (exception is RecommendationValidationException validationException)
+        {
+            httpContext.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+            return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+            {
+                HttpContext = httpContext,
+                ProblemDetails = new ValidationProblemDetails(
+                    validationException.Errors.ToDictionary(pair => pair.Key, pair => pair.Value))
+                {
+                    Status = StatusCodes.Status422UnprocessableEntity,
+                    Title = "Ошибка проверки запроса",
+                    Detail = "Исправьте ссылки на навыки кандидатов."
+                },
+                Exception = exception
+            });
+        }
+
         var (statusCode, title, detail) = exception switch
         {
             BadHttpRequestException => (

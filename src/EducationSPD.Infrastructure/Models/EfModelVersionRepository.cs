@@ -12,6 +12,14 @@ internal sealed class EfModelVersionRepository(AppDbContext dbContext) : IModelV
             .AsNoTracking()
             .SingleOrDefaultAsync(version => version.Status == ModelVersionStatus.Active, cancellationToken);
 
+    public async Task<IReadOnlyList<ModelVersion>> GetProjectionVersionsAsync(CancellationToken cancellationToken) =>
+        await dbContext.ModelVersions
+            .AsNoTracking()
+            .Where(version => version.Status == ModelVersionStatus.Active
+                || version.Status == ModelVersionStatus.Recalculating)
+            .OrderBy(version => version.Version)
+            .ToListAsync(cancellationToken);
+
     public async Task<int> GetNextVersionAsync(CancellationToken cancellationToken)
     {
         var lastVersion = await dbContext.ModelVersions

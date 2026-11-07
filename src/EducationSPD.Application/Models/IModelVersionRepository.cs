@@ -8,6 +8,9 @@ public interface IModelVersionRepository
     /// <summary>Возвращает текущую целостную активную версию.</summary>
     Task<ModelVersion?> GetActiveAsync(CancellationToken cancellationToken);
 
+    /// <summary>Возвращает версии, проекции которых должны учитывать новые эпизоды.</summary>
+    Task<IReadOnlyList<ModelVersion>> GetProjectionVersionsAsync(CancellationToken cancellationToken);
+
     /// <summary>Возвращает следующий свободный номер версии.</summary>
     Task<int> GetNextVersionAsync(CancellationToken cancellationToken);
 

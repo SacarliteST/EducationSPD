@@ -48,6 +48,11 @@ internal sealed class ModelVersionConfiguration : IEntityTypeConfiguration<Model
         builder.Property(version => version.RecalculationStartedAt).HasColumnName("recalculation_started_at");
         builder.Property(version => version.ActivatedAt).HasColumnName("activated_at");
         builder.Property(version => version.ArchivedAt).HasColumnName("archived_at");
+        builder.Property(version => version.RecalculationCursorModuleKey)
+            .HasColumnName("recalculation_cursor_module_key")
+            .HasMaxLength(100);
+        builder.Property(version => version.RecalculationCursorStudentId)
+            .HasColumnName("recalculation_cursor_student_id");
 
         builder.HasIndex(version => version.Version).IsUnique().HasDatabaseName("UX_ModelVersions_Version");
         builder.HasIndex(version => version.Status)

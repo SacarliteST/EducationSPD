@@ -49,7 +49,8 @@ internal sealed class LearningEpisodeFinalizationHandler(
             return LearningEpisodeApplyResult.MissingCatalog;
         }
 
-        var activeModel = await modelVersionRepository.GetActiveAsync(cancellationToken)
+        var projectionModels = await modelVersionRepository.GetProjectionVersionsAsync(cancellationToken);
+        var activeModel = projectionModels.SingleOrDefault(model => model.Status == ModelVersionStatus.Active)
             ?? throw new InvalidOperationException("Активная версия математической модели не найдена.");
 
         var skillsByExternalId = skills.ToDictionary(skill => skill.SkillId, StringComparer.Ordinal);
@@ -82,15 +83,18 @@ internal sealed class LearningEpisodeFinalizationHandler(
             .ToArray();
 
         await episodeRepository.AddAsync(episode, cancellationToken);
-        foreach (var skillId in observations.Select(observation => observation.SkillId))
+        foreach (var model in projectionModels)
         {
-            await RebuildSkillProjectionAsync(
-                finalization.StudentId,
-                finalization.ModuleKey,
-                skillId,
-                activeModel,
-                completeHistory,
-                cancellationToken);
+            foreach (var skillId in observations.Select(observation => observation.SkillId))
+            {
+                await RebuildSkillProjectionAsync(
+                    finalization.StudentId,
+                    finalization.ModuleKey,
+                    skillId,
+                    model,
+                    completeHistory,
+                    cancellationToken);
+            }
         }
 
         await episodeRepository.SaveChangesAsync(cancellationToken);

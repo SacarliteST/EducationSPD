@@ -215,6 +215,15 @@ namespace EducationSPD.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric(10,9)")
                         .HasColumnName("learn_probability");
 
+                    b.Property<string>("RecalculationCursorModuleKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("recalculation_cursor_module_key");
+
+                    b.Property<Guid?>("RecalculationCursorStudentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("recalculation_cursor_student_id");
+
                     b.Property<DateTimeOffset?>("RecalculationStartedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("recalculation_started_at");
@@ -387,6 +396,22 @@ namespace EducationSPD.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_Skills_Origin", "origin IN (1, 2)");
                         });
+                });
+
+            modelBuilder.Entity("EducationSPD.Infrastructure.Models.RecalculationStudentModule", b =>
+                {
+                    b.Property<string>("ModuleKey")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("module_key");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("student_id");
+
+                    b.ToTable((string)null);
+
+                    b.ToView("LearningEpisodes", (string)null);
                 });
 
             modelBuilder.Entity("EducationSPD.Domain.Episodes.LearningEpisode", b =>

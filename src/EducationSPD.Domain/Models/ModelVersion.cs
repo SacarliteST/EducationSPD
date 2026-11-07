@@ -87,6 +87,12 @@ public sealed class ModelVersion
     /// <summary>Время переноса версии в архив.</summary>
     public DateTimeOffset? ArchivedAt { get; private set; }
 
+    /// <summary>Последний полностью пересчитанный модуль.</summary>
+    public string? RecalculationCursorModuleKey { get; private set; }
+
+    /// <summary>Последний полностью пересчитанный студент внутри модуля.</summary>
+    public Guid? RecalculationCursorStudentId { get; private set; }
+
     /// <summary>Создаёт новую черновую версию без изменения существующих версий.</summary>
     public static ModelVersion CreateDraft(Guid id, int version, ModelParameters parameters, DateTimeOffset createdAt) =>
         new(id, version, parameters, ModelVersionStatus.Draft, createdAt);
@@ -116,6 +122,23 @@ public sealed class ModelVersion
         EnsureTransition(ModelVersionStatus.Recalculating, activatedAt);
         Status = ModelVersionStatus.Active;
         ActivatedAt = activatedAt;
+    }
+
+    /// <summary>Сохраняет позицию возобновляемого полного пересчёта.</summary>
+    public void AdvanceRecalculation(string moduleKey, Guid studentId)
+    {
+        if (Status != ModelVersionStatus.Recalculating)
+        {
+            throw new InvalidOperationException("Позицию можно менять только во время пересчёта.");
+        }
+
+        if (string.IsNullOrWhiteSpace(moduleKey) || studentId == Guid.Empty)
+        {
+            throw new ArgumentException("Позиция пересчёта заполнена некорректно.");
+        }
+
+        RecalculationCursorModuleKey = moduleKey;
+        RecalculationCursorStudentId = studentId;
     }
 
     /// <summary>Архивирует ранее активную версию.</summary>

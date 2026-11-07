@@ -59,6 +59,11 @@ public static class ServiceCollectionExtensions
             .Validate(ModelOptions.IsValid, "Конфигурация математической модели заполнена некорректно.")
             .ValidateOnStart();
 
+        services.AddOptions<RecalculationOptions>()
+            .BindConfiguration(RecalculationOptions.SectionName)
+            .Validate(RecalculationOptions.IsValid, "Конфигурация полного пересчёта заполнена некорректно.")
+            .ValidateOnStart();
+
         services.AddDbContext<AppDbContext>((serviceProvider, options) =>
         {
             var postgresOptions = serviceProvider.GetRequiredService<IOptions<PostgresOptions>>().Value;
@@ -76,10 +81,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStudentSkillStateRepository, EfStudentSkillStateRepository>();
         services.AddScoped<IStudentSkillStateReader, EfStudentSkillStateReader>();
         services.AddScoped<IRecommendationContextReader, EfRecommendationContextReader>();
+        services.AddScoped<IModelRecalculationBatchExecutor, EfModelRecalculationBatchExecutor>();
         services.AddHostedService<SkillCatalogKafkaConsumer>();
         services.AddHostedService<SkillCatalogInboxProcessor>();
         services.AddHostedService<LearningEpisodeKafkaConsumer>();
         services.AddHostedService<LearningEpisodeInboxProcessor>();
+        services.AddHostedService<ModelRecalculationProcessor>();
 
         return services;
     }

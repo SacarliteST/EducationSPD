@@ -2,6 +2,7 @@ using EducationSPD.Domain.Inbox;
 using EducationSPD.Domain.Episodes;
 using EducationSPD.Domain.Skills;
 using EducationSPD.Domain.Models;
+using EducationSPD.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace EducationSPD.Infrastructure.Persistence;
@@ -35,6 +36,9 @@ public sealed class AppDbContext : DbContext
 
     /// <summary>Текущие BKT-проекции навыков студентов.</summary>
     public DbSet<StudentSkillState> StudentSkillStates => Set<StudentSkillState>();
+
+    internal DbSet<RecalculationStudentModule> RecalculationStudentModules =>
+        Set<RecalculationStudentModule>();
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)

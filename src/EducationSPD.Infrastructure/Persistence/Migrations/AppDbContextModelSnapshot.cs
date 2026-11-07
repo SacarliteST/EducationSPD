@@ -22,6 +22,92 @@ namespace EducationSPD.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("EducationSPD.Domain.Episodes.LearningEpisode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("EpisodeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("episode_id");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("event_id");
+
+                    b.Property<DateTimeOffset>("FinalizedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("finalized_at");
+
+                    b.Property<string>("ModuleKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("module_key");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("student_id");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("task_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_LearningEpisodes_EventId");
+
+                    b.HasIndex("ModuleKey", "EpisodeId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_LearningEpisodes_ModuleKey_EpisodeId");
+
+                    b.HasIndex("StudentId", "FinalizedAt")
+                        .HasDatabaseName("IX_LearningEpisodes_StudentId_FinalizedAt");
+
+                    b.ToTable("LearningEpisodes", (string)null);
+                });
+
+            modelBuilder.Entity("EducationSPD.Domain.Episodes.SkillObservation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("LearningEpisodeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("learning_episode_id");
+
+                    b.Property<short>("Outcome")
+                        .HasColumnType("smallint")
+                        .HasColumnName("outcome");
+
+                    b.Property<Guid>("SkillId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("skill_id");
+
+                    b.Property<short>("Source")
+                        .HasColumnType("smallint")
+                        .HasColumnName("source");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SkillId");
+
+                    b.HasIndex("LearningEpisodeId", "SkillId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_SkillObservations_EpisodeId_SkillId");
+
+                    b.ToTable("SkillObservations", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_SkillObservations_Outcome", "outcome IN (1, 2)");
+
+                            t.HasCheckConstraint("CK_SkillObservations_Source", "source IN (1, 2)");
+                        });
+                });
+
             modelBuilder.Entity("EducationSPD.Domain.Inbox.InboxMessage", b =>
                 {
                     b.Property<Guid>("EventId")
@@ -150,6 +236,26 @@ namespace EducationSPD.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_Skills_Origin", "origin IN (1, 2)");
                         });
+                });
+
+            modelBuilder.Entity("EducationSPD.Domain.Episodes.SkillObservation", b =>
+                {
+                    b.HasOne("EducationSPD.Domain.Episodes.LearningEpisode", null)
+                        .WithMany("Observations")
+                        .HasForeignKey("LearningEpisodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EducationSPD.Domain.Skills.Skill", null)
+                        .WithMany()
+                        .HasForeignKey("SkillId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("EducationSPD.Domain.Episodes.LearningEpisode", b =>
+                {
+                    b.Navigation("Observations");
                 });
 #pragma warning restore 612, 618
         }

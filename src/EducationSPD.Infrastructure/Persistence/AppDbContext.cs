@@ -1,4 +1,5 @@
 using EducationSPD.Domain.Inbox;
+using EducationSPD.Domain.Episodes;
 using EducationSPD.Domain.Skills;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,6 +22,12 @@ public sealed class AppDbContext : DbContext
 
     /// <summary> Сохранённые интеграционные сообщения.</summary>
     public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
+
+    /// <summary>Неизменяемая история финализированных учебных эпизодов.</summary>
+    public DbSet<LearningEpisode> LearningEpisodes => Set<LearningEpisode>();
+
+    /// <summary>Бинарные наблюдения навыков завершённых эпизодов.</summary>
+    public DbSet<SkillObservation> SkillObservations => Set<SkillObservation>();
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)

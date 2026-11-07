@@ -54,7 +54,7 @@ SPD-021 ─► SQLSPD-001 ─► SQLSPD-002 ─► SQLSPD-003 ─► SQLSPD-004 
 | `SPD-005` | Домен и хранение каталога навыков | Critical | Done | 001 | EducationSPD |
 | `SPD-006` | Универсальный durable inbox | Critical | Done | 004, 005 | EducationSPD |
 | `SPD-007` | Consumer каталога навыков | Critical | Done | 004, 005, 006 | EducationSPD |
-| `SPD-008` | Домен и хранение эпизодов и наблюдений | Critical | Backlog | 004, 005 | EducationSPD |
+| `SPD-008` | Домен и хранение эпизодов и наблюдений | Critical | Done | 004, 005 | EducationSPD |
 | `SPD-009` | Consumer финализированных эпизодов | Critical | Backlog | 006, 007, 008 | EducationSPD |
 | `SPD-010` | PendingCatalog и независимая очередь студентов | Critical | Backlog | 009 | EducationSPD |
 | `SPD-011` | Конкурентность и запоздавшие события | Critical | Backlog | 009, 010 | EducationSPD |
@@ -239,6 +239,14 @@ configuration и миграцию.
 - эпизод хранит только минимальный состав из ТЗ;
 - нет полей балла, причины завершения, курса, группы и снимка задания;
 - исторические наблюдения не изменяются через прикладной сценарий.
+
+**Выполнено 2026-11-07.** Добавлен неизменяемый агрегат `LearningEpisode` с
+бинарными `SkillObservation`, источником `ValidationRule`/`TaskTag` и минимальным
+составом из wire-контракта. Уникальность события, идентичности эпизода и навыка
+внутри эпизода закреплена доменом и PostgreSQL-индексами. Наблюдения ссылаются на
+каталог навыков через `ON DELETE RESTRICT`; прикладной репозиторий предоставляет
+только добавление и чтение истории. Сгенерирована миграция `AddLearningEpisodes`,
+инварианты подтверждены доменными и PostgreSQL integration tests.
 
 ### SPD-009 — Consumer финализированных эпизодов
 

@@ -1,6 +1,8 @@
+using EducationSPD.Application.Episodes;
 using EducationSPD.Application.Inbox;
 using EducationSPD.Application.Skills;
 using EducationSPD.Infrastructure.Configuration;
+using EducationSPD.Infrastructure.Episodes;
 using EducationSPD.Infrastructure.Inbox;
 using EducationSPD.Infrastructure.Kafka;
 using EducationSPD.Infrastructure.Persistence;
@@ -60,6 +62,7 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddScoped<IDatabaseMigrationManager, DatabaseMigrationManager>();
+        services.AddScoped<ILearningEpisodeRepository, EfLearningEpisodeRepository>();
         services.AddScoped<IInboxStore, EfInboxStore>();
         services.AddScoped<IInboxBatchExecutor, EfInboxBatchExecutor>();
         services.AddScoped<ISkillRepository, EfSkillRepository>();

@@ -50,8 +50,8 @@ SPD-021 ─► SQLSPD-001 ─► SQLSPD-002 ─► SQLSPD-003 ─► SQLSPD-004 
 | `SPD-001` | Зафиксировать baseline архитектуры и wire-контрактов | Critical | Done | — | EducationSPD |
 | `SPD-002` | Перевести Web foundation на Controllers | Critical | Done | 001 | EducationSPD |
 | `SPD-003` | Типизированная конфигурация и service authentication | Critical | Done | 001, 002 | EducationSPD |
-| `SPD-004` | Публичные Kafka-контракты и сериализация | Critical | Review | 001 | EducationSPD |
-| `SPD-005` | Домен и хранение каталога навыков | Critical | Backlog | 001 | EducationSPD |
+| `SPD-004` | Публичные Kafka-контракты и сериализация | Critical | Done | 001 | EducationSPD |
+| `SPD-005` | Домен и хранение каталога навыков | Critical | Done | 001 | EducationSPD |
 | `SPD-006` | Универсальный durable inbox | Critical | Backlog | 004, 005 | EducationSPD |
 | `SPD-007` | Consumer каталога навыков | Critical | Backlog | 004, 005, 006 | EducationSPD |
 | `SPD-008` | Домен и хранение эпизодов и наблюдений | Critical | Backlog | 004, 005 | EducationSPD |
@@ -153,9 +153,9 @@ Kafka SDK или Domain entities.
 - контракты можно переиспользовать producer-проектом SQL Module;
 - unit-тесты фиксируют wire compatibility v1.
 
-**Реализовано 2026-11-07, ожидает task-scoped commit.** Добавлен независимый
-проект `EducationSPD.Kafka.Contracts` с событиями v1, строковыми enum и общей
-строгой JSON-сериализацией. Семантическая проверка отклоняет неизвестную версию,
+**Выполнено 2026-11-07, commit `4aaf662`.** Добавлен независимый проект
+`EducationSPD.Kafka.Contracts` с событиями v1, строковыми enum и общей строгой
+JSON-сериализацией. Семантическая проверка отклоняет неизвестную версию,
 неизвестные enum, не-UTC время, некорректные идентификаторы и повторяющиеся
 `SkillId`. Wire-примеры из ТЗ и nullable `Description` закреплены unit-тестами.
 
@@ -172,6 +172,13 @@ Kafka SDK или Domain entities.
 - soft-delete сохраняет историческую запись;
 - ограничения длины и enum продублированы в БД;
 - PostgreSQL integration tests подтверждают инварианты.
+
+**Выполнено 2026-11-07.** Добавлена доменная
+проекция навыка, собственный `SkillOrigin`, репозиторий и таблица `Skills`.
+Обновления упорядочиваются по `OccurredAt`, затем по `EventId`; старое событие
+не меняет состояние, а soft-delete сохраняет строку и идентичность навыка.
+Уникальность `(ModuleKey, SkillId)`, длины и допустимые значения origin
+закреплены миграцией и PostgreSQL integration tests.
 
 ### SPD-006 — Универсальный durable inbox
 

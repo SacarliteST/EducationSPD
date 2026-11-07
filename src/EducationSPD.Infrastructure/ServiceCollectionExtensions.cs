@@ -1,6 +1,8 @@
+using EducationSPD.Application.Skills;
 using EducationSPD.Infrastructure.Configuration;
 using EducationSPD.Infrastructure.Persistence;
 using EducationSPD.Infrastructure.Persistence.Migrations;
+using EducationSPD.Infrastructure.Skills;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,6 +57,7 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddScoped<IDatabaseMigrationManager, DatabaseMigrationManager>();
+        services.AddScoped<ISkillRepository, EfSkillRepository>();
 
         return services;
     }

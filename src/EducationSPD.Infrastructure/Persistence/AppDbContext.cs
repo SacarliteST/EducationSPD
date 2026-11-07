@@ -1,3 +1,4 @@
+using EducationSPD.Domain.Skills;
 using Microsoft.EntityFrameworkCore;
 
 namespace EducationSPD.Infrastructure.Persistence;
@@ -13,6 +14,9 @@ public sealed class AppDbContext : DbContext
         : base(options)
     {
     }
+
+    /// <summary>Локальный каталог навыков учебных модулей.</summary>
+    public DbSet<Skill> Skills => Set<Skill>();
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)

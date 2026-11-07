@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\EducationSPD.Host\EducationSPD.Host.csproj" />
+    <ProjectReference Include="..\..\src\EducationSPD.Kafka.Contracts\EducationSPD.Kafka.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

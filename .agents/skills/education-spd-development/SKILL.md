@@ -1,6 +1,6 @@
 ---
 name: education-spd-development
-description: Develop EducationSPD backend features in its Domain, Application, Contracts, Infrastructure, Web and Host projects, using ASP.NET Core Controllers, EF Core and appropriately scoped HTTP tests.
+description: Develop EducationSPD backend features in its layered projects, keeping HTTP and Kafka contracts separate and using ASP.NET Core Controllers, EF Core and appropriately scoped tests.
 ---
 
 # EducationSPD development
@@ -13,16 +13,21 @@ working layers; use the existing health endpoint for a basic host smoke test.
 
 - `src/EducationSPD.Domain`: entities and domain invariants without dependencies on outer layers.
 - `src/EducationSPD.Application`: application services, commands, interfaces, feature DTOs and expected application exceptions.
-- `src/EducationSPD.Contracts`: public request/response DTOs and centralized `ApiRoutes`.
+- `src/EducationSPD.Contracts`: public HTTP request/response DTOs and centralized `ApiRoutes`.
+- `src/EducationSPD.Kafka.Contracts`: versioned Kafka wire contracts and their shared JSON serialization without Kafka SDK, EF Core or Domain dependencies.
 - `src/EducationSPD.Infrastructure`: EF Core context, configurations, migrations and repository implementations.
 - `src/EducationSPD.Web`: ASP.NET Core Controllers, mappings, validators, exception handling and HTTP-layer registration.
 - `src/EducationSPD.Host`: executable entry point and composition root that invokes each layer registration.
 - `tests/EducationSPD.Tests`: HTTP tests through `WebApplicationFactory`; use PostgreSQL Testcontainers only for scenarios that exercise persistence.
 
-Keep code grouped by feature. Put public wire contracts in `Contracts/<Feature>/Dtos`,
+Keep code grouped by feature. Put public HTTP contracts in `Contracts/<Feature>/Dtos`,
 application interfaces and exceptions inside their feature, controllers, mappings
 and validators inside the corresponding Web feature, and EF configuration in
 Infrastructure.
+
+Do not place Kafka messages in `EducationSPD.Contracts`. Keep them in the separate
+Kafka contracts assembly so a producer module can reference the wire model without
+depending on EducationSPD HTTP or implementation projects.
 
 ## Compose the application
 

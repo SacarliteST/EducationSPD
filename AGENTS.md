@@ -18,7 +18,9 @@
 
 - `EducationSPD.Domain` содержит сущности и доменные инварианты.
 - `EducationSPD.Application` содержит сценарии, интерфейсы и feature-oriented application types.
-- `EducationSPD.Contracts` содержит публичные DTO и маршруты.
+- `EducationSPD.Contracts` содержит публичные HTTP DTO и маршруты.
+- `EducationSPD.Kafka.Contracts` содержит переиспользуемые wire-контракты Kafka
+  и не зависит от Kafka SDK, EF Core или доменных сущностей.
 - `EducationSPD.Infrastructure` содержит EF Core, конфигурации, миграции и реализации репозиториев.
 - `EducationSPD.Web` содержит ASP.NET Core Controllers, mappings, validators,
   exception handling и регистрацию HTTP-слоя. Новые HTTP endpoint реализуются

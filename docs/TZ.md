@@ -755,7 +755,8 @@ POST /api/v1/recommendations/rank
 |---|---|
 | `EducationSPD.Domain` | сущности, enum и доменные инварианты |
 | `EducationSPD.Application` | сценарии, интерфейсы хранилищ, BKT и ranking orchestration |
-| `EducationSPD.Contracts` | HTTP DTO, Kafka DTO, `ApiRoutes` |
+| `EducationSPD.Contracts` | HTTP DTO и `ApiRoutes` |
+| `EducationSPD.Kafka.Contracts` | Версионированные Kafka DTO и единая JSON-сериализация без зависимости от Kafka SDK |
 | `EducationSPD.Infrastructure` | EF Core, Kafka consumers, background workers, repositories |
 | `EducationSPD.Web` | ASP.NET Core Controllers, validators, mappings, auth и регистрация HTTP-слоя |
 | `EducationSPD.Host` | Точка входа, composition root и настройка HTTP-конвейера |

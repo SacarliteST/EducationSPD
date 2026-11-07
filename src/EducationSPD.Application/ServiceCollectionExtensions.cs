@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using EducationSPD.Application.Episodes;
 using EducationSPD.Application.Skills;
+using EducationSPD.Application.Models;
 
 namespace EducationSPD.Application;
 
@@ -17,6 +18,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(TimeProvider.System);
         services.AddScoped<ISkillCatalogChangeHandler, SkillCatalogChangeHandler>();
         services.AddScoped<ILearningEpisodeFinalizationHandler, LearningEpisodeFinalizationHandler>();
+        services.AddScoped<IStudentSkillsQueryHandler, StudentSkillsQueryHandler>();
 
         return services;
     }

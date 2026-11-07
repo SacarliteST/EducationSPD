@@ -5,9 +5,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EducationSPD.Infrastructure.Models;
 
-internal sealed class EfStudentSkillStateRepository(AppDbContext dbContext)
-    : IStudentSkillStateRepository
+internal sealed class EfStudentSkillStateRepository : IStudentSkillStateRepository
 {
+    private readonly AppDbContext dbContext;
+
+    public EfStudentSkillStateRepository(AppDbContext dbContext)
+    {
+        this.dbContext = dbContext;
+    }
+
     public Task<StudentSkillState?> FindAsync(
         Guid studentId,
         string moduleKey,

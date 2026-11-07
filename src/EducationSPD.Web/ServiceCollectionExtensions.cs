@@ -1,6 +1,9 @@
 using System.Text.Json.Serialization;
 using EducationSPD.Web.Common;
 using EducationSPD.Web.Security;
+using EducationSPD.Web.Features.Skills;
+using EducationSPD.Contracts.Skills;
+using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -22,6 +25,7 @@ public static class ServiceCollectionExtensions
         services.AddExceptionHandler<ApiExceptionHandler>();
         services.AddScoped<FluentValidationActionFilter>();
         services.AddScoped<ServiceKeyAuthorizationFilter>();
+        services.AddScoped<IValidator<GetStudentSkillsRequest>, GetStudentSkillsRequestValidator>();
 
         services.AddOptions<ServiceAuthenticationOptions>()
             .Bind(configuration.GetSection(ServiceAuthenticationOptions.SectionName))
@@ -45,6 +49,7 @@ public static class ServiceCollectionExtensions
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
 
         return services;

@@ -42,7 +42,7 @@ public sealed class KafkaCatalogFixture : IAsyncLifetime
                 ["Kafka:ConsumerGroup"] = $"education-spd-tests-{Guid.NewGuid():N}",
                 ["Kafka:SkillCatalogTopic"] = SkillCatalogTopic,
                 ["Kafka:EpisodeFinalizedTopic"] = EpisodeFinalizedTopic,
-                ["Kafka:MaxRetryAttempts"] = "3",
+                ["Kafka:MaxRetryAttempts"] = "10",
                 ["Kafka:InitialRetryDelayMilliseconds"] = "100",
                 ["Inbox:BatchSize"] = "10",
                 ["Inbox:PendingCatalogRetryIntervalSeconds"] = "1",

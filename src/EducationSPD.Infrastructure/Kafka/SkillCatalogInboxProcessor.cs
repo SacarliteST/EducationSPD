@@ -47,6 +47,7 @@ internal sealed class SkillCatalogInboxProcessor(
         await using var scope = scopeFactory.CreateAsyncScope();
         var executor = scope.ServiceProvider.GetRequiredService<IInboxBatchExecutor>();
         var handler = scope.ServiceProvider.GetRequiredService<ISkillCatalogChangeHandler>();
+        var pendingCatalogNotifier = scope.ServiceProvider.GetRequiredService<IPendingCatalogNotifier>();
 
         return await executor.ExecuteReadyBatchAsync(
             InboxMessageType.SkillCatalogChanged,
@@ -54,7 +55,11 @@ internal sealed class SkillCatalogInboxProcessor(
             {
                 foreach (var message in messages)
                 {
-                    await ApplyAsync(message, handler, batchCancellationToken);
+                    await ApplyAsync(
+                        message,
+                        handler,
+                        pendingCatalogNotifier,
+                        batchCancellationToken);
                 }
             },
             cancellationToken);
@@ -63,6 +68,7 @@ internal sealed class SkillCatalogInboxProcessor(
     private async Task ApplyAsync(
         InboxMessage inboxMessage,
         ISkillCatalogChangeHandler handler,
+        IPendingCatalogNotifier pendingCatalogNotifier,
         CancellationToken cancellationToken)
     {
         if (inboxMessage.SchemaVersion != KafkaSchemaVersions.Version1)
@@ -95,6 +101,10 @@ internal sealed class SkillCatalogInboxProcessor(
                 MapOrigin(message.Origin),
                 message.IsDeleted,
                 message.OccurredAt),
+            cancellationToken);
+        await pendingCatalogNotifier.ResumeAsync(
+            message.ModuleKey,
+            message.SkillId,
             cancellationToken);
         inboxMessage.MarkApplied(timeProvider.GetUtcNow());
     }

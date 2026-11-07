@@ -16,11 +16,13 @@ namespace EducationSPD.Infrastructure.Kafka;
 internal sealed class LearningEpisodeInboxProcessor(
     IServiceScopeFactory scopeFactory,
     IOptions<InboxOptions> options,
+    IOptions<KafkaOptions> kafkaOptions,
     TimeProvider timeProvider,
     ILogger<LearningEpisodeInboxProcessor> logger) : BackgroundService
 {
     private static readonly TimeSpan EmptyBatchDelay = TimeSpan.FromMilliseconds(250);
     private readonly InboxOptions options = options.Value;
+    private readonly KafkaOptions kafkaOptions = kafkaOptions.Value;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -100,8 +102,22 @@ internal sealed class LearningEpisodeInboxProcessor(
                 inboxMessage.MarkFailed("EpisodeConflict", timeProvider.GetUtcNow());
                 break;
             case LearningEpisodeApplyResult.MissingCatalog:
-                inboxMessage.WaitForCatalog(
-                    timeProvider.GetUtcNow().AddSeconds(options.PendingCatalogRetryIntervalSeconds));
+                if (inboxMessage.RetryCount >= kafkaOptions.MaxRetryAttempts - 1)
+                {
+                    inboxMessage.MarkFailed("CatalogRetryLimitExceeded", timeProvider.GetUtcNow());
+                    logger.LogWarning(
+                        "Эпизод {EventId} отклонён после исчерпания повторов ожидания каталога",
+                        inboxMessage.EventId);
+                }
+                else
+                {
+                    inboxMessage.WaitForCatalog(
+                        timeProvider.GetUtcNow().AddSeconds(options.PendingCatalogRetryIntervalSeconds));
+                    logger.LogInformation(
+                        "Эпизод {EventId} ожидает обновления каталога навыков",
+                        inboxMessage.EventId);
+                }
+
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(result));

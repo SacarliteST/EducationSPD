@@ -118,7 +118,20 @@ public sealed class InboxMessage
         Status = InboxStatus.PendingCatalog;
         ErrorCode = null;
         ProcessedAt = null;
+        RetryCount++;
         NextRetryAt = nextRetryAt;
+    }
+
+    /// <summary>Возвращает ожидающее сообщение в обработку после изменения каталога.</summary>
+    public void ResumeAfterCatalogUpdate()
+    {
+        if (Status != InboxStatus.PendingCatalog)
+        {
+            throw new InvalidOperationException("Возобновить можно только сообщение, ожидающее каталог.");
+        }
+
+        Status = InboxStatus.Received;
+        NextRetryAt = null;
     }
 
     /// <summary>Планирует повтор после временной технической ошибки.</summary>

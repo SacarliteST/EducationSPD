@@ -65,6 +65,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ILearningEpisodeRepository, EfLearningEpisodeRepository>();
         services.AddScoped<IInboxStore, EfInboxStore>();
         services.AddScoped<IInboxBatchExecutor, EfInboxBatchExecutor>();
+        services.AddScoped<IPendingCatalogNotifier, EfPendingCatalogNotifier>();
         services.AddScoped<ISkillRepository, EfSkillRepository>();
         services.AddHostedService<SkillCatalogKafkaConsumer>();
         services.AddHostedService<SkillCatalogInboxProcessor>();

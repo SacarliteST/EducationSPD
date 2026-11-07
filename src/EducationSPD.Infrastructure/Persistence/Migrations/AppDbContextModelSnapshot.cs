@@ -22,6 +22,79 @@ namespace EducationSPD.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("EducationSPD.Domain.Inbox.InboxMessage", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("event_id");
+
+                    b.Property<string>("ErrorCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("error_code");
+
+                    b.Property<string>("MessageKey")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)")
+                        .HasColumnName("message_key");
+
+                    b.Property<short>("MessageType")
+                        .HasColumnType("smallint")
+                        .HasColumnName("message_type");
+
+                    b.Property<DateTimeOffset?>("NextRetryAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_retry_at");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("payload");
+
+                    b.Property<string>("PayloadHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("payload_hash");
+
+                    b.Property<DateTimeOffset?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_at");
+
+                    b.Property<DateTimeOffset>("ReceivedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("received_at");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("retry_count");
+
+                    b.Property<int>("SchemaVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("schema_version");
+
+                    b.Property<short>("Status")
+                        .HasColumnType("smallint")
+                        .HasColumnName("status");
+
+                    b.HasKey("EventId");
+
+                    b.HasIndex("Status", "NextRetryAt", "ReceivedAt", "EventId")
+                        .HasDatabaseName("IX_InboxMessages_ReadyBatch");
+
+                    b.ToTable("InboxMessages", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_InboxMessages_MessageType", "message_type IN (1, 2)");
+
+                            t.HasCheckConstraint("CK_InboxMessages_RetryCount", "retry_count >= 0");
+
+                            t.HasCheckConstraint("CK_InboxMessages_SchemaVersion", "schema_version > 0");
+
+                            t.HasCheckConstraint("CK_InboxMessages_Status", "status IN (1, 2, 3, 4)");
+                        });
+                });
+
             modelBuilder.Entity("EducationSPD.Domain.Skills.Skill", b =>
                 {
                     b.Property<Guid>("Id")

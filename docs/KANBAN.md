@@ -52,7 +52,7 @@ SPD-021 ─► SQLSPD-001 ─► SQLSPD-002 ─► SQLSPD-003 ─► SQLSPD-004 
 | `SPD-003` | Типизированная конфигурация и service authentication | Critical | Done | 001, 002 | EducationSPD |
 | `SPD-004` | Публичные Kafka-контракты и сериализация | Critical | Done | 001 | EducationSPD |
 | `SPD-005` | Домен и хранение каталога навыков | Critical | Done | 001 | EducationSPD |
-| `SPD-006` | Универсальный durable inbox | Critical | Backlog | 004, 005 | EducationSPD |
+| `SPD-006` | Универсальный durable inbox | Critical | Done | 004, 005 | EducationSPD |
 | `SPD-007` | Consumer каталога навыков | Critical | Backlog | 004, 005, 006 | EducationSPD |
 | `SPD-008` | Домен и хранение эпизодов и наблюдений | Critical | Backlog | 004, 005 | EducationSPD |
 | `SPD-009` | Consumer финализированных эпизодов | Critical | Backlog | 006, 007, 008 | EducationSPD |
@@ -192,6 +192,14 @@ metadata. Inbox должен отделять сохранение трансп�
 - переходы `Received/PendingCatalog/Applied/Failed` валидируются;
 - сообщение сохраняется до Kafka offset commit;
 - операции пригодны для пакетного фонового чтения без гонок.
+
+**Выполнено 2026-11-07.** Добавлены доменная
+модель inbox, хранение raw JSON в `jsonb`, SHA-256, тип и версия сообщения,
+статусы, безопасный код ошибки и retry metadata. Вставка через
+`ON CONFLICT DO NOTHING` различает повтор и конфликт payload. Пакетный executor
+обрабатывает готовые строки в транзакции с `FOR UPDATE SKIP LOCKED`, поэтому
+параллельные обработчики получают разные сообщения. Переходы состояний и
+операционный restart закреплены доменными и PostgreSQL integration tests.
 
 ### SPD-007 — Consumer каталога навыков
 

@@ -1,3 +1,4 @@
+using EducationSPD.Domain.Inbox;
 using EducationSPD.Domain.Skills;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,9 @@ public sealed class AppDbContext : DbContext
 
     /// <summary>Локальный каталог навыков учебных модулей.</summary>
     public DbSet<Skill> Skills => Set<Skill>();
+
+    /// <summary> Сохранённые интеграционные сообщения.</summary>
+    public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)

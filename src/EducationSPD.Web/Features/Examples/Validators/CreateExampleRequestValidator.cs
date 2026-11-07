@@ -1,13 +1,17 @@
 using EducationSPD.Contracts.Examples;
 using FluentValidation;
 
-namespace EducationSPD.Web.Endpoints;
+namespace EducationSPD.Web.Features.Examples.Validators;
 
-/// <summary>Правила валидации запроса <see cref="UpdateExampleRequest"/>.</summary>
-internal sealed class UpdateExampleRequestValidator : AbstractValidator<UpdateExampleRequest>
+/// <summary>
+/// Проверяет запрос создания примера.
+/// </summary>
+internal sealed class CreateExampleRequestValidator : AbstractValidator<CreateExampleRequest>
 {
-    /// <summary>Создаёт правила валидации.</summary>
-    public UpdateExampleRequestValidator()
+    /// <summary>
+    /// Создаёт правила проверки.
+    /// </summary>
+    public CreateExampleRequestValidator()
     {
         RuleFor(request => request.Name)
             .NotEmpty()

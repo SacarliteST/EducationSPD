@@ -2,11 +2,15 @@ using System.Text.Json.Serialization;
 using EducationSPD.Application.Examples;
 using EducationSPD.Contracts.Examples;
 using EducationSPD.Infrastructure;
+using EducationSPD.Infrastructure.Configuration;
 using EducationSPD.Infrastructure.Persistence;
-using EducationSPD.Web.Endpoints;
+using EducationSPD.Web.Common;
+using EducationSPD.Web.Features.Examples.Validators;
+using EducationSPD.Web.Security;
 using FluentValidation;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,10 +37,33 @@ builder.Services.AddScoped<IValidator<CreateExampleRequest>, CreateExampleReques
 builder.Services.AddScoped<IValidator<UpdateExampleRequest>, UpdateExampleRequestValidator>();
 builder.Services.AddAppInfrastructure(builder.Configuration);
 
-// Числа принимаются только числами: иначе OpenAPI документирует каждое числовое поле
-// как union [number, string], а сгенерированные клиенты получают `number | string`.
-builder.Services.ConfigureHttpJsonOptions(options =>
-    options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
+builder.Services.AddScoped<FluentValidationActionFilter>();
+builder.Services.AddScoped<ServiceKeyAuthorizationFilter>();
+builder.Services.AddOptions<ServiceAuthenticationOptions>()
+    .BindConfiguration(ServiceAuthenticationOptions.SectionName)
+    .Validate(
+        options => !string.IsNullOrWhiteSpace(options.ServiceKey),
+        $"{ServiceAuthenticationOptions.SectionName}:ServiceKey обязателен.")
+    .ValidateOnStart();
+
+builder.Services
+    .AddControllers(options =>
+    {
+        options.Filters.Add<FluentValidationActionFilter>();
+        options.Filters.Add<ServiceKeyAuthorizationFilter>();
+    })
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = ApiValidationProblemFactory.Create;
+    })
+    .AddJsonOptions(options =>
+    {
+        // Числа принимаются только числами: иначе OpenAPI документирует числовые поля
+        // как union [number, string], а сгенерированные клиенты получают number | string.
+        options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+    });
 
 builder.Services.AddOpenApi();
 builder.Services.AddCors(options =>
@@ -52,13 +79,14 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Первым в конвейере — ловит исключения из всего, что ниже.
-app.UseApiExceptionHandler();
+app.UseExceptionHandler();
 app.UseHttpLogging();
 
 // В Development миграции применяются всегда; вне него — только при
 // Database:ApplyMigrationsOnStartup=true (по умолчанию false).
+var postgresOptions = app.Services.GetRequiredService<IOptions<PostgresOptions>>().Value;
 var applyMigrationsOnStartup = app.Environment.IsDevelopment()
-    || app.Configuration.GetValue("Database:ApplyMigrationsOnStartup", false);
+    || postgresOptions.ApplyMigrationsOnStartup;
 
 if (applyMigrationsOnStartup)
 {
@@ -77,14 +105,7 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
-app.MapGet("/health", () => Results.Ok(new { Status = "Healthy" }))
-    .WithName("Health")
-    .WithTags("System")
-    .WithSummary("Проверка работоспособности API")
-    .WithDescription("Возвращает успешный ответ, если приложение запущено.")
-    .Produces(StatusCodes.Status200OK);
-
-app.MapAppEndpoints();
+app.MapControllers();
 
 app.Run();
 

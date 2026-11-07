@@ -16,6 +16,7 @@
 
     <!-- Microsoft.Extensions -->
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.4" />
 
     <!-- EF Core + Npgsql -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.4" />

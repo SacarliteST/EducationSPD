@@ -20,10 +20,14 @@
 - `EducationSPD.Application` содержит сценарии, интерфейсы и feature-oriented application types.
 - `EducationSPD.Contracts` содержит публичные DTO и маршруты.
 - `EducationSPD.Infrastructure` содержит EF Core, конфигурации, миграции и реализации репозиториев.
-- `EducationSPD.Web` содержит Minimal API, mappings, validators, exception handling и composition root.
+- `EducationSPD.Web` содержит ASP.NET Core Controllers, mappings, validators,
+  exception handling и composition root. Новые HTTP endpoint реализуются только
+  через Controllers; Minimal API в демонстрационной фиче `Examples` считается
+  legacy и не является образцом транспортного слоя.
 - `EducationSPD.Tests` проверяет HTTP-сценарии на PostgreSQL Testcontainers.
 
-Использовать существующую фичу `Examples` как образец структуры, пока в проекте не закреплён новый шаблон.
+Использовать существующую фичу `Examples` как образец границ слоёв и тестовой
+инфраструктуры, но не копировать её Minimal API transport.
 
 ## Базовые правила
 
@@ -34,4 +38,3 @@
 - Генерация выполняется только вне песочницы.
 - Не включать чужие незакоммиченные изменения в коммит.
 - Не выполнять push или deploy без явной команды пользователя.
-

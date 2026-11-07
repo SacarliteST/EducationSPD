@@ -6,9 +6,6 @@ public sealed class ModelParameters
     /// <summary>Размер матрицы попарных сравнений МАИ.</summary>
     public const int AhpMatrixSize = 4;
 
-    private const decimal ReciprocalTolerance = 0.0001m;
-    private const decimal MaxConsistencyRatio = 0.10m;
-
     /// <summary>Создаёт и проверяет параметры модели.</summary>
     public ModelParameters(
         decimal initialMasteryProbability,
@@ -38,7 +35,7 @@ public sealed class ModelParameters
 
         ArgumentNullException.ThrowIfNull(ahpMatrix);
         var matrix = ahpMatrix.ToArray();
-        ValidateAhpMatrix(matrix);
+        var weights = AhpCalculator.CalculateWeights(matrix);
 
         InitialMasteryProbability = initialMasteryProbability;
         LearnProbability = learnProbability;
@@ -47,7 +44,7 @@ public sealed class ModelParameters
         TaskTagGuessProbability = taskTagGuessProbability;
         TaskTagSlipProbability = taskTagSlipProbability;
         AhpMatrix = matrix;
-        AhpWeights = CalculateWeights(matrix);
+        AhpWeights = weights;
     }
 
     /// <summary>Начальная вероятность освоения.</summary>
@@ -92,73 +89,4 @@ public sealed class ModelParameters
         }
     }
 
-    private static void ValidateAhpMatrix(decimal[] matrix)
-    {
-        if (matrix.Length != AhpMatrixSize * AhpMatrixSize)
-        {
-            throw new ArgumentException("Матрица МАИ должна иметь размер 4x4.", nameof(matrix));
-        }
-
-        for (var row = 0; row < AhpMatrixSize; row++)
-        {
-            for (var column = 0; column < AhpMatrixSize; column++)
-            {
-                var value = matrix[(row * AhpMatrixSize) + column];
-                if (value <= 0)
-                {
-                    throw new ArgumentException("Все элементы матрицы МАИ должны быть положительными.", nameof(matrix));
-                }
-
-                if (row == column && value != 1)
-                {
-                    throw new ArgumentException("На диагонали матрицы МАИ должны находиться единицы.", nameof(matrix));
-                }
-
-                var reciprocal = matrix[(column * AhpMatrixSize) + row];
-                if (Math.Abs((value * reciprocal) - 1) > ReciprocalTolerance)
-                {
-                    throw new ArgumentException("Матрица МАИ должна быть взаимно обратной.", nameof(matrix));
-                }
-            }
-        }
-
-        var weights = CalculateWeights(matrix);
-        decimal lambdaMax = 0;
-        for (var row = 0; row < AhpMatrixSize; row++)
-        {
-            decimal weightedSum = 0;
-            for (var column = 0; column < AhpMatrixSize; column++)
-            {
-                weightedSum += matrix[(row * AhpMatrixSize) + column] * weights[column];
-            }
-
-            lambdaMax += weightedSum / weights[row];
-        }
-
-        lambdaMax /= AhpMatrixSize;
-        var consistencyIndex = (lambdaMax - AhpMatrixSize) / (AhpMatrixSize - 1);
-        const decimal randomIndex = 0.90m;
-        if (consistencyIndex / randomIndex > MaxConsistencyRatio)
-        {
-            throw new ArgumentException("Коэффициент согласованности матрицы МАИ должен быть не больше 0,10.", nameof(matrix));
-        }
-    }
-
-    private static decimal[] CalculateWeights(decimal[] matrix)
-    {
-        var geometricMeans = new decimal[AhpMatrixSize];
-        for (var row = 0; row < AhpMatrixSize; row++)
-        {
-            double product = 1;
-            for (var column = 0; column < AhpMatrixSize; column++)
-            {
-                product *= (double)matrix[(row * AhpMatrixSize) + column];
-            }
-
-            geometricMeans[row] = (decimal)Math.Pow(product, 1d / AhpMatrixSize);
-        }
-
-        var total = geometricMeans.Sum();
-        return geometricMeans.Select(value => value / total).ToArray();
-    }
 }

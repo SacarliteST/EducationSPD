@@ -2,6 +2,7 @@ using EducationSPD.Application.Episodes;
 using EducationSPD.Domain.Episodes;
 using EducationSPD.Domain.Skills;
 using EducationSPD.Infrastructure.Episodes;
+using EducationSPD.Infrastructure.Models;
 using EducationSPD.Infrastructure.Skills;
 using EducationSPD.Tests.Support;
 using Microsoft.EntityFrameworkCore;
@@ -86,7 +87,10 @@ public sealed class EpisodeConcurrencyTests(PostgresDatabaseFixture database)
         return new LearningEpisodeFinalizationHandler(
             new EfLearningEpisodeRepository(dbContext),
             new EfSkillRepository(dbContext),
-            new PostgresStudentModuleLock(dbContext));
+            new PostgresStudentModuleLock(dbContext),
+            new EfModelVersionRepository(dbContext),
+            new EfStudentSkillStateRepository(dbContext),
+            TimeProvider.System);
     }
 
     private static LearningEpisodeFinalization CreateFinalization(

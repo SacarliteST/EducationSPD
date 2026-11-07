@@ -22,6 +22,7 @@ public sealed class LearningEpisode
         string moduleKey,
         Guid taskId,
         DateTimeOffset finalizedAt,
+        int appliedModelVersion,
         IEnumerable<NewSkillObservation> newObservations)
     {
         Id = id;
@@ -31,6 +32,7 @@ public sealed class LearningEpisode
         ModuleKey = moduleKey;
         TaskId = taskId;
         FinalizedAt = finalizedAt;
+        AppliedModelVersion = appliedModelVersion;
         observations.AddRange(newObservations.Select(observation => new SkillObservation(
             observation.Id,
             observation.SkillId,
@@ -59,6 +61,9 @@ public sealed class LearningEpisode
     /// <summary>Момент окончательной финализации в UTC.</summary>
     public DateTimeOffset FinalizedAt { get; private set; }
 
+    /// <summary>Версия модели, активная при применении эпизода.</summary>
+    public int AppliedModelVersion { get; private set; }
+
     /// <summary>Окончательные результаты навыков эпизода.</summary>
     public IReadOnlyCollection<SkillObservation> Observations => observations;
 
@@ -71,6 +76,7 @@ public sealed class LearningEpisode
         string moduleKey,
         Guid taskId,
         DateTimeOffset finalizedAt,
+        int appliedModelVersion,
         IReadOnlyCollection<NewSkillObservation> observations)
     {
         RequireGuid(id, nameof(id));
@@ -94,6 +100,11 @@ public sealed class LearningEpisode
         if (finalizedAt.Offset != TimeSpan.Zero)
         {
             throw new ArgumentException("Время финализации должно быть указано в UTC.", nameof(finalizedAt));
+        }
+
+        if (appliedModelVersion <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(appliedModelVersion));
         }
 
         if (observations is not { Count: >= 1 and <= MaxObservationCount })
@@ -121,6 +132,7 @@ public sealed class LearningEpisode
             moduleKey,
             taskId,
             finalizedAt,
+            appliedModelVersion,
             observations);
     }
 

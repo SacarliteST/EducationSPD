@@ -28,6 +28,10 @@ namespace EducationSPD.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<int>("AppliedModelVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("applied_model_version");
+
                     b.Property<Guid>("EpisodeId")
                         .HasColumnType("uuid")
                         .HasColumnName("episode_id");
@@ -55,6 +59,8 @@ namespace EducationSPD.Infrastructure.Persistence.Migrations
                         .HasColumnName("task_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AppliedModelVersion");
 
                     b.HasIndex("EventId")
                         .IsUnique()
@@ -276,6 +282,56 @@ namespace EducationSPD.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EducationSPD.Domain.Models.StudentSkillState", b =>
+                {
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("student_id");
+
+                    b.Property<string>("ModuleKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("module_key");
+
+                    b.Property<Guid>("SkillId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("skill_id");
+
+                    b.Property<int>("ModelVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("model_version");
+
+                    b.Property<DateTimeOffset?>("LastObservedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_observed_at");
+
+                    b.Property<decimal>("MasteryProbability")
+                        .HasPrecision(18, 16)
+                        .HasColumnType("numeric(18,16)")
+                        .HasColumnName("mastery_probability");
+
+                    b.Property<int>("ObservationsCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("observations_count");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("StudentId", "ModuleKey", "SkillId", "ModelVersion");
+
+                    b.HasIndex("ModelVersion");
+
+                    b.HasIndex("SkillId");
+
+                    b.ToTable("StudentSkillStates", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_StudentSkillStates_MasteryProbability", "mastery_probability BETWEEN 0 AND 1");
+
+                            t.HasCheckConstraint("CK_StudentSkillStates_ObservationsCount", "observations_count > 0");
+                        });
+                });
+
             modelBuilder.Entity("EducationSPD.Domain.Skills.Skill", b =>
                 {
                     b.Property<Guid>("Id")
@@ -333,12 +389,38 @@ namespace EducationSPD.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EducationSPD.Domain.Episodes.LearningEpisode", b =>
+                {
+                    b.HasOne("EducationSPD.Domain.Models.ModelVersion", null)
+                        .WithMany()
+                        .HasForeignKey("AppliedModelVersion")
+                        .HasPrincipalKey("Version")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("EducationSPD.Domain.Episodes.SkillObservation", b =>
                 {
                     b.HasOne("EducationSPD.Domain.Episodes.LearningEpisode", null)
                         .WithMany("Observations")
                         .HasForeignKey("LearningEpisodeId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EducationSPD.Domain.Skills.Skill", null)
+                        .WithMany()
+                        .HasForeignKey("SkillId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("EducationSPD.Domain.Models.StudentSkillState", b =>
+                {
+                    b.HasOne("EducationSPD.Domain.Models.ModelVersion", null)
+                        .WithMany()
+                        .HasForeignKey("ModelVersion")
+                        .HasPrincipalKey("Version")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("EducationSPD.Domain.Skills.Skill", null)

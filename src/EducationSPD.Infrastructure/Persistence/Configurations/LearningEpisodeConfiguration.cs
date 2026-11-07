@@ -1,4 +1,5 @@
 using EducationSPD.Domain.Episodes;
+using EducationSPD.Domain.Models;
 using EducationSPD.Domain.Skills;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -34,6 +35,15 @@ internal sealed class LearningEpisodeConfiguration : IEntityTypeConfiguration<Le
         builder.Property(episode => episode.FinalizedAt)
             .HasColumnName("finalized_at")
             .IsRequired();
+        builder.Property(episode => episode.AppliedModelVersion)
+            .HasColumnName("applied_model_version")
+            .IsRequired();
+
+        builder.HasOne<ModelVersion>()
+            .WithMany()
+            .HasPrincipalKey(version => version.Version)
+            .HasForeignKey(episode => episode.AppliedModelVersion)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(episode => episode.Observations)
             .WithOne()

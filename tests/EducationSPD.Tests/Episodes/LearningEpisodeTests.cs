@@ -54,6 +54,7 @@ public sealed class LearningEpisodeTests
             "sql",
             Guid.NewGuid(),
             DateTimeOffset.UtcNow,
+            1,
             observations);
     }
 

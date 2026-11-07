@@ -33,6 +33,9 @@ public sealed class AppDbContext : DbContext
     /// <summary>Версии математической модели.</summary>
     public DbSet<ModelVersion> ModelVersions => Set<ModelVersion>();
 
+    /// <summary>Текущие BKT-проекции навыков студентов.</summary>
+    public DbSet<StudentSkillState> StudentSkillStates => Set<StudentSkillState>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

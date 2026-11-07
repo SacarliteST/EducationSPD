@@ -103,6 +103,7 @@ public sealed class LearningEpisodePersistenceTests(PostgresDatabaseFixture data
             "sql",
             Guid.NewGuid(),
             DateTimeOffset.UtcNow,
+            1,
             [
                 new NewSkillObservation(
                     Guid.NewGuid(),

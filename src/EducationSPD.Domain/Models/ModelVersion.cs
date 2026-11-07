@@ -91,6 +91,17 @@ public sealed class ModelVersion
     public static ModelVersion CreateDraft(Guid id, int version, ModelParameters parameters, DateTimeOffset createdAt) =>
         new(id, version, parameters, ModelVersionStatus.Draft, createdAt);
 
+    /// <summary>Возвращает проверенный набор параметров сохранённой версии.</summary>
+    public ModelParameters GetParameters() =>
+        new(
+            InitialMasteryProbability,
+            LearnProbability,
+            ValidationRuleGuessProbability,
+            ValidationRuleSlipProbability,
+            TaskTagGuessProbability,
+            TaskTagSlipProbability,
+            ahpMatrix);
+
     /// <summary>Переводит черновик в состояние полного пересчёта.</summary>
     public void StartRecalculation(DateTimeOffset startedAt)
     {

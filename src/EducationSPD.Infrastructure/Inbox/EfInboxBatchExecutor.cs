@@ -103,14 +103,44 @@ internal sealed class EfInboxBatchExecutor : IInboxBatchExecutor
                         AND earlier_message.payload->>'moduleKey' = current_message.payload->>'moduleKey'
                         AND earlier_message.payload->>'studentId' = current_message.payload->>'studentId'
                         AND (
-                            COALESCE(earlier_message.payload->>'finalizedAt', ''),
-                            COALESCE(earlier_message.payload->>'episodeId', ''))
+                            CASE
+                                WHEN pg_input_is_valid(
+                                    earlier_message.payload->>'finalizedAt',
+                                    'timestamp with time zone')
+                                THEN (earlier_message.payload->>'finalizedAt')::timestamp with time zone
+                                ELSE '-infinity'::timestamp with time zone
+                            END,
+                            CASE
+                                WHEN pg_input_is_valid(earlier_message.payload->>'episodeId', 'uuid')
+                                THEN (earlier_message.payload->>'episodeId')::uuid
+                                ELSE '00000000-0000-0000-0000-000000000000'::uuid
+                            END)
                           < (
-                            COALESCE(current_message.payload->>'finalizedAt', ''),
-                            COALESCE(current_message.payload->>'episodeId', '')))
+                            CASE
+                                WHEN pg_input_is_valid(
+                                    current_message.payload->>'finalizedAt',
+                                    'timestamp with time zone')
+                                THEN (current_message.payload->>'finalizedAt')::timestamp with time zone
+                                ELSE '-infinity'::timestamp with time zone
+                            END,
+                            CASE
+                                WHEN pg_input_is_valid(current_message.payload->>'episodeId', 'uuid')
+                                THEN (current_message.payload->>'episodeId')::uuid
+                                ELSE '00000000-0000-0000-0000-000000000000'::uuid
+                            END))
                 ORDER BY
-                    COALESCE(current_message.payload->>'finalizedAt', ''),
-                    COALESCE(current_message.payload->>'episodeId', ''),
+                    CASE
+                        WHEN pg_input_is_valid(
+                            current_message.payload->>'finalizedAt',
+                            'timestamp with time zone')
+                        THEN (current_message.payload->>'finalizedAt')::timestamp with time zone
+                        ELSE '-infinity'::timestamp with time zone
+                    END,
+                    CASE
+                        WHEN pg_input_is_valid(current_message.payload->>'episodeId', 'uuid')
+                        THEN (current_message.payload->>'episodeId')::uuid
+                        ELSE '00000000-0000-0000-0000-000000000000'::uuid
+                    END,
                     current_message.received_at,
                     current_message.event_id
                 LIMIT {options.BatchSize}

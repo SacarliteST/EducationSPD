@@ -5,12 +5,18 @@ namespace EducationSPD.Application.Episodes;
 
 internal sealed class LearningEpisodeFinalizationHandler(
     ILearningEpisodeRepository episodeRepository,
-    ISkillRepository skillRepository) : ILearningEpisodeFinalizationHandler
+    ISkillRepository skillRepository,
+    IStudentModuleLock studentModuleLock) : ILearningEpisodeFinalizationHandler
 {
     public async Task<LearningEpisodeApplyResult> ApplyAsync(
         LearningEpisodeFinalization finalization,
         CancellationToken cancellationToken)
     {
+        await studentModuleLock.AcquireAsync(
+            finalization.StudentId,
+            finalization.ModuleKey,
+            cancellationToken);
+
         if (await episodeRepository.FindByEventIdAsync(
                 finalization.EventId,
                 cancellationToken) is not null)

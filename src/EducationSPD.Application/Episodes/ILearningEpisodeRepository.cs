@@ -14,6 +14,12 @@ public interface ILearningEpisodeRepository
         Guid episodeId,
         CancellationToken cancellationToken);
 
+    /// <summary>Читает историю студента в педагогическом порядке.</summary>
+    Task<IReadOnlyList<LearningEpisode>> ListChronologicalAsync(
+        Guid studentId,
+        string moduleKey,
+        CancellationToken cancellationToken);
+
     /// <summary>Добавляет окончательный эпизод со всеми наблюдениями.</summary>
     Task AddAsync(LearningEpisode episode, CancellationToken cancellationToken);
 

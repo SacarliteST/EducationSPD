@@ -29,6 +29,20 @@ internal sealed class EfLearningEpisodeRepository(AppDbContext dbContext)
                 cancellationToken);
     }
 
+    public async Task<IReadOnlyList<LearningEpisode>> ListChronologicalAsync(
+        Guid studentId,
+        string moduleKey,
+        CancellationToken cancellationToken)
+    {
+        return await dbContext.LearningEpisodes
+            .AsNoTracking()
+            .Include(episode => episode.Observations)
+            .Where(episode => episode.StudentId == studentId && episode.ModuleKey == moduleKey)
+            .OrderBy(episode => episode.FinalizedAt)
+            .ThenBy(episode => episode.EpisodeId)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task AddAsync(
         LearningEpisode episode,
         CancellationToken cancellationToken)

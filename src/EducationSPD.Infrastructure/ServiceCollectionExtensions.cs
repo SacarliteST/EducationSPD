@@ -63,6 +63,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IDatabaseMigrationManager, DatabaseMigrationManager>();
         services.AddScoped<ILearningEpisodeRepository, EfLearningEpisodeRepository>();
+        services.AddScoped<IStudentModuleLock, PostgresStudentModuleLock>();
         services.AddScoped<IInboxStore, EfInboxStore>();
         services.AddScoped<IInboxBatchExecutor, EfInboxBatchExecutor>();
         services.AddScoped<IPendingCatalogNotifier, EfPendingCatalogNotifier>();

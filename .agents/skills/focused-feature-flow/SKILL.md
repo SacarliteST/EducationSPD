@@ -20,5 +20,4 @@ description: Implement or revise an EducationSPD feature with narrow analysis, t
 - Do not rerun tests only because formatting completed and do not spend time reviewing a formatter-only diff.
 - Check only `git status` to avoid staging unrelated work, stage task-scoped files, and create the task commit without another broad analysis pass.
 
-Do not start the Web host, PostgreSQL containers, migrations, generation, dependency installation, push, deploy or cross-repository work unless the task requires it. Stop only processes and containers started by the agent. Report unavailable infrastructure honestly.
-
+Do not start the EducationSPD Host process, PostgreSQL containers, migrations, generation, dependency installation, push, deploy or cross-repository work unless the task requires it. Stop only processes and containers started by the agent. Report unavailable infrastructure honestly.

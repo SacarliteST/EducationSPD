@@ -100,7 +100,7 @@ skill разработки и настоящей доске. Зафиксиро�
 
 Подключить `AddControllers`/`MapControllers`, общий `ProblemDetails`, validation
 pipeline и OpenAPI metadata для controller actions. Демонстрационную фичу
-`Examples` удалить либо мигрировать без расширения её функциональности.
+удалить, не расширяя её функциональность.
 
 Готово, когда:
 
@@ -110,9 +110,9 @@ pipeline и OpenAPI metadata для controller actions. Демонстрацио
 - неизвестная ошибка возвращает безопасный `500`;
 - существующие тестовые утилиты работают с Controllers.
 
-**Выполнено 2026-11-07.** Minimal API-группы удалены. CRUD `Examples` перенесён
-в `ExamplesController` без изменения маршрутов, `/health` — в анонимный
-`SystemController`. Подключены `AddControllers`/`MapControllers`, общий
+**Обновлено 2026-11-07.** Демонстрационная фича полностью удалена,
+`/health` реализован анонимным `SystemController`. Подключены
+`AddControllers`/`MapControllers`, общий
 FluentValidation action filter с `422`, model-binding `422` и безопасный
 `IExceptionHandler` с ProblemDetails.
 

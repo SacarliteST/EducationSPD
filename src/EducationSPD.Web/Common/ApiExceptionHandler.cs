@@ -1,6 +1,7 @@
-using EducationSPD.Application.Examples;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace EducationSPD.Web.Common;
 
@@ -31,10 +32,6 @@ internal sealed class ApiExceptionHandler : IExceptionHandler
     {
         var (statusCode, title, detail) = exception switch
         {
-            ExampleNotFoundException => (
-                StatusCodes.Status404NotFound,
-                "Ресурс не найден",
-                exception.Message),
             BadHttpRequestException => (
                 StatusCodes.Status400BadRequest,
                 "Некорректный запрос",

@@ -1,32 +1,17 @@
-using EducationSPD.Infrastructure.Persistence;
+using EducationSPD.Host;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
-using Testcontainers.PostgreSql;
 
 namespace EducationSPD.Tests.Support;
 
-/// <summary>Поднимает API поверх реальной PostgreSQL в контейнере.</summary>
-public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
+/// <summary>Поднимает HTTP-конвейер приложения для системных тестов.</summary>
+public sealed class ApiFactory : WebApplicationFactory<Program>
 {
-    public const string ServiceKey = "education-spd-integration-test-key";
-    private readonly PostgreSqlContainer postgres = new PostgreSqlBuilder("postgres:16-alpine").Build();
-
-    public async Task InitializeAsync()
-    {
-        await postgres.StartAsync();
-    }
-
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.UseEnvironment("Development");
-        builder.UseSetting("ConnectionStrings:Postgres", postgres.GetConnectionString());
-        builder.UseSetting("ServiceAuthentication:ServiceKey", ServiceKey);
-    }
-
-    public new async Task DisposeAsync()
-    {
-        await base.DisposeAsync();
-        await postgres.DisposeAsync();
+        builder.UseEnvironment("Production");
+        builder.UseSetting("ConnectionStrings:Postgres", "Host=unused;Database=unused;Username=unused;Password=unused");
+        builder.UseSetting("ServiceAuthentication:ServiceKey", "education-spd-system-test-key");
+        builder.UseSetting("Database:ApplyMigrationsOnStartup", "false");
     }
 }

@@ -1,7 +1,6 @@
-using EducationSPD.Application.Examples;
 using EducationSPD.Infrastructure.Configuration;
-using EducationSPD.Infrastructure.Examples;
 using EducationSPD.Infrastructure.Persistence;
+using EducationSPD.Infrastructure.Persistence.Migrations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,17 +9,14 @@ using Microsoft.Extensions.Options;
 namespace EducationSPD.Infrastructure;
 
 /// <summary>
-/// Регистрация инфраструктурных зависимостей.
+/// Регистрирует хранение и интеграционные зависимости слоя Infrastructure.
 /// </summary>
-public static class DependencyInjection
+public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Добавляет PostgreSQL-контекст и репозитории в контейнер зависимостей.
+    /// Добавляет инфраструктуру EducationSPD.
     /// </summary>
-    /// <param name="services">Коллекция сервисов приложения.</param>
-    /// <param name="configuration">Конфигурация приложения с подключением к базе данных.</param>
-    /// <returns>Та же коллекция сервисов для цепочки вызовов.</returns>
-    public static IServiceCollection AddAppInfrastructure(
+    public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration)
     {
@@ -58,7 +54,7 @@ public static class DependencyInjection
             options.UseNpgsql(postgresOptions.ConnectionString);
         });
 
-        services.AddScoped<IExamplesRepository, EfExamplesRepository>();
+        services.AddScoped<IDatabaseMigrationManager, DatabaseMigrationManager>();
 
         return services;
     }

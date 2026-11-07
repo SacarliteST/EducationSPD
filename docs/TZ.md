@@ -757,7 +757,8 @@ POST /api/v1/recommendations/rank
 | `EducationSPD.Application` | сценарии, интерфейсы хранилищ, BKT и ranking orchestration |
 | `EducationSPD.Contracts` | HTTP DTO, Kafka DTO, `ApiRoutes` |
 | `EducationSPD.Infrastructure` | EF Core, Kafka consumers, background workers, repositories |
-| `EducationSPD.Web` | ASP.NET Core Controllers, validators, mappings, auth, composition root |
+| `EducationSPD.Web` | ASP.NET Core Controllers, validators, mappings, auth и регистрация HTTP-слоя |
+| `EducationSPD.Host` | Точка входа, composition root и настройка HTTP-конвейера |
 | `EducationSPD.Tests` | HTTP и интеграционные тесты PostgreSQL/Kafka |
 
 Domain и Application не должны зависеть от Web или Infrastructure. Kafka и EF
@@ -985,7 +986,7 @@ Recalculation:BatchSize
 
 ### Итерация 1. Фундамент и каталог навыков
 
-- удалить или изолировать демонстрационную фичу `Examples`;
+- не добавлять демонстрационные CRUD-фичи в рабочие слои;
 - добавить базовые enum и сущность навыка;
 - создать EF-конфигурацию и миграцию;
 - добавить Kafka contracts;

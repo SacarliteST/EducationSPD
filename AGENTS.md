@@ -21,13 +21,12 @@
 - `EducationSPD.Contracts` содержит публичные DTO и маршруты.
 - `EducationSPD.Infrastructure` содержит EF Core, конфигурации, миграции и реализации репозиториев.
 - `EducationSPD.Web` содержит ASP.NET Core Controllers, mappings, validators,
-  exception handling и composition root. Новые HTTP endpoint реализуются только
-  через Controllers; Minimal API в демонстрационной фиче `Examples` считается
-  legacy и не является образцом транспортного слоя.
-- `EducationSPD.Tests` проверяет HTTP-сценарии на PostgreSQL Testcontainers.
-
-Использовать существующую фичу `Examples` как образец границ слоёв и тестовой
-инфраструктуры, но не копировать её Minimal API transport.
+  exception handling и регистрацию HTTP-слоя. Новые HTTP endpoint реализуются
+  только через Controllers.
+- `EducationSPD.Host` является единственной точкой входа и composition root:
+  `Startup` собирает регистрации слоёв и настраивает HTTP-конвейер.
+- `EducationSPD.Tests` проверяет HTTP-сценарии; сценарии с хранением данных
+  выполняются на PostgreSQL Testcontainers.
 
 ## Базовые правила
 

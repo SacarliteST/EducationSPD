@@ -1,13 +1,13 @@
 ---
 name: education-spd-development
-description: Develop EducationSPD backend features using its layered Domain, Application, Contracts, Infrastructure and ASP.NET Core Controllers structure with EF Core and PostgreSQL integration tests.
+description: Develop EducationSPD backend features in its Domain, Application, Contracts, Infrastructure, Web and Host projects, using ASP.NET Core Controllers, EF Core and appropriately scoped HTTP tests.
 ---
 
 # EducationSPD development
 
-Read `AGENTS.md` first. Use the existing `Examples` feature only as a reference for
-layer boundaries and test infrastructure. Its Minimal API transport is legacy and
-must not be copied into new features.
+Read `AGENTS.md` first. Keep the executable composition root isolated in
+`EducationSPD.Host`. Do not add demonstration or placeholder CRUD features to the
+working layers; use the existing health endpoint for a basic host smoke test.
 
 ## Route the change
 
@@ -15,13 +15,31 @@ must not be copied into new features.
 - `src/EducationSPD.Application`: application services, commands, interfaces, feature DTOs and expected application exceptions.
 - `src/EducationSPD.Contracts`: public request/response DTOs and centralized `ApiRoutes`.
 - `src/EducationSPD.Infrastructure`: EF Core context, configurations, migrations and repository implementations.
-- `src/EducationSPD.Web`: ASP.NET Core Controllers, mappings, validators, exception handling and composition.
-- `tests/EducationSPD.Tests`: HTTP integration tests against PostgreSQL Testcontainers.
+- `src/EducationSPD.Web`: ASP.NET Core Controllers, mappings, validators, exception handling and HTTP-layer registration.
+- `src/EducationSPD.Host`: executable entry point and composition root that invokes each layer registration.
+- `tests/EducationSPD.Tests`: HTTP tests through `WebApplicationFactory`; use PostgreSQL Testcontainers only for scenarios that exercise persistence.
 
 Keep code grouped by feature. Put public wire contracts in `Contracts/<Feature>/Dtos`,
 application interfaces and exceptions inside their feature, controllers, mappings
 and validators inside the corresponding Web feature, and EF configuration in
 Infrastructure.
+
+## Compose the application
+
+Each layer owns its registration extension:
+
+- Application exposes `AddApplication()`;
+- Infrastructure exposes `AddInfrastructure(configuration)`;
+- Web exposes `AddWeb(configuration)`;
+- Host calls these extensions and contains environment-level setup.
+
+Keep `Program` limited to creating the builder, delegating to `Startup`, building
+and running the application. Keep service composition and middleware ordering in
+Host `Startup`. Store executable configuration and launch profiles in Host.
+
+Web must not reference Infrastructure. Application and Domain must not reference
+Web, Infrastructure or Host. Register a new implementation in the layer that owns
+it instead of registering feature services directly in Host.
 
 ## HTTP transport
 
@@ -34,12 +52,8 @@ to an application input, call one application use case and map the result. Keep
 business rules, EF queries and Kafka processing out of controllers.
 
 Keep routes centralized in `EducationSPD.Contracts.ApiRoutes` and reference those
-constants from route attributes. Register controllers through `AddControllers()`
-and map them through `MapControllers()`.
-
-When an existing Minimal API endpoint is changed as part of a requested feature,
-migrate that endpoint to a controller if this can be done without changing its
-public contract. Do not perform an unrelated full transport rewrite implicitly.
+constants from route attributes. Web registers controllers through
+`AddControllers()`; Host maps them through `MapControllers()`.
 
 ## API and persistence
 

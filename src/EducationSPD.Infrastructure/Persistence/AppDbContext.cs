@@ -1,4 +1,3 @@
-using EducationSPD.Domain.Examples;
 using Microsoft.EntityFrameworkCore;
 
 namespace EducationSPD.Infrastructure.Persistence;
@@ -14,11 +13,6 @@ public sealed class AppDbContext : DbContext
         : base(options)
     {
     }
-
-    /// <summary>
-    /// Примеры.
-    /// </summary>
-    public DbSet<Example> Examples => Set<Example>();
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)

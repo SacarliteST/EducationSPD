@@ -68,6 +68,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISkillRepository, EfSkillRepository>();
         services.AddHostedService<SkillCatalogKafkaConsumer>();
         services.AddHostedService<SkillCatalogInboxProcessor>();
+        services.AddHostedService<LearningEpisodeKafkaConsumer>();
+        services.AddHostedService<LearningEpisodeInboxProcessor>();
 
         return services;
     }

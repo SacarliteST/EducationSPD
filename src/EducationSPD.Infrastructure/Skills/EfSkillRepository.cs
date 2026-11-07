@@ -24,6 +24,16 @@ internal sealed class EfSkillRepository : ISkillRepository
             cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Skill>> FindManyAsync(
+        string moduleKey,
+        IReadOnlyCollection<string> skillIds,
+        CancellationToken cancellationToken)
+    {
+        return await dbContext.Skills
+            .Where(skill => skill.ModuleKey == moduleKey && skillIds.Contains(skill.SkillId))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task AddAsync(Skill skill, CancellationToken cancellationToken)
     {
         await dbContext.Skills.AddAsync(skill, cancellationToken);

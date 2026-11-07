@@ -19,10 +19,16 @@ public sealed class KafkaCatalogFixture : IAsyncLifetime
     private ServiceProvider? serviceProvider;
     private SkillCatalogKafkaConsumer? consumer;
     private SkillCatalogInboxProcessor? processor;
+    private LearningEpisodeKafkaConsumer? episodeConsumer;
+    private LearningEpisodeInboxProcessor? episodeProcessor;
     private bool consumerStarted;
     private bool processorStarted;
+    private bool episodeConsumerStarted;
+    private bool episodeProcessorStarted;
 
-    public string Topic { get; } = $"learning.skill-catalog.{Guid.NewGuid():N}";
+    public string SkillCatalogTopic { get; } = $"learning.skill-catalog.{Guid.NewGuid():N}";
+
+    public string EpisodeFinalizedTopic { get; } = $"learning.episode-finalized.{Guid.NewGuid():N}";
 
     public async Task InitializeAsync()
     {
@@ -34,8 +40,8 @@ public sealed class KafkaCatalogFixture : IAsyncLifetime
                 ["ConnectionStrings:Postgres"] = postgres.GetConnectionString(),
                 ["Kafka:BootstrapServers"] = kafka.GetBootstrapAddress(),
                 ["Kafka:ConsumerGroup"] = $"education-spd-tests-{Guid.NewGuid():N}",
-                ["Kafka:SkillCatalogTopic"] = Topic,
-                ["Kafka:EpisodeFinalizedTopic"] = "learning.episode-finalized.tests",
+                ["Kafka:SkillCatalogTopic"] = SkillCatalogTopic,
+                ["Kafka:EpisodeFinalizedTopic"] = EpisodeFinalizedTopic,
                 ["Kafka:MaxRetryAttempts"] = "3",
                 ["Kafka:InitialRetryDelayMilliseconds"] = "100",
                 ["Inbox:BatchSize"] = "10",
@@ -62,8 +68,10 @@ public sealed class KafkaCatalogFixture : IAsyncLifetime
         await dbContext.Database.MigrateAsync();
 
         var hostedServices = serviceProvider.GetServices<IHostedService>().ToArray();
-        consumer = Assert.IsType<SkillCatalogKafkaConsumer>(hostedServices[0]);
-        processor = Assert.IsType<SkillCatalogInboxProcessor>(hostedServices[1]);
+        consumer = Assert.Single(hostedServices.OfType<SkillCatalogKafkaConsumer>());
+        processor = Assert.Single(hostedServices.OfType<SkillCatalogInboxProcessor>());
+        episodeConsumer = Assert.Single(hostedServices.OfType<LearningEpisodeKafkaConsumer>());
+        episodeProcessor = Assert.Single(hostedServices.OfType<LearningEpisodeInboxProcessor>());
     }
 
     public AppDbContext CreateDbContext()
@@ -96,7 +104,34 @@ public sealed class KafkaCatalogFixture : IAsyncLifetime
         processorStarted = true;
     }
 
+    public async Task StartEpisodeConsumerAsync()
+    {
+        if (episodeConsumerStarted)
+        {
+            return;
+        }
+
+        await episodeConsumer!.StartAsync(CancellationToken.None);
+        episodeConsumerStarted = true;
+    }
+
+    public async Task StartEpisodeProcessorAsync()
+    {
+        if (episodeProcessorStarted)
+        {
+            return;
+        }
+
+        await episodeProcessor!.StartAsync(CancellationToken.None);
+        episodeProcessorStarted = true;
+    }
+
     public async Task PublishAsync(string key, string payload)
+    {
+        await PublishAsync(SkillCatalogTopic, key, payload);
+    }
+
+    public async Task PublishAsync(string topic, string key, string payload)
     {
         using var producer = new ProducerBuilder<string, string>(new ProducerConfig
         {
@@ -104,12 +139,22 @@ public sealed class KafkaCatalogFixture : IAsyncLifetime
         }).Build();
 
         await producer.ProduceAsync(
-            Topic,
+            topic,
             new Message<string, string> { Key = key, Value = payload });
     }
 
     public async Task DisposeAsync()
     {
+        if (episodeProcessorStarted)
+        {
+            await episodeProcessor!.StopAsync(CancellationToken.None);
+        }
+
+        if (episodeConsumerStarted)
+        {
+            await episodeConsumer!.StopAsync(CancellationToken.None);
+        }
+
         if (processorStarted)
         {
             await processor!.StopAsync(CancellationToken.None);

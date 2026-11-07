@@ -55,7 +55,7 @@ SPD-021 ─► SQLSPD-001 ─► SQLSPD-002 ─► SQLSPD-003 ─► SQLSPD-004 
 | `SPD-006` | Универсальный durable inbox | Critical | Done | 004, 005 | EducationSPD |
 | `SPD-007` | Consumer каталога навыков | Critical | Done | 004, 005, 006 | EducationSPD |
 | `SPD-008` | Домен и хранение эпизодов и наблюдений | Critical | Done | 004, 005 | EducationSPD |
-| `SPD-009` | Consumer финализированных эпизодов | Critical | Backlog | 006, 007, 008 | EducationSPD |
+| `SPD-009` | Consumer финализированных эпизодов | Critical | Done | 006, 007, 008 | EducationSPD |
 | `SPD-010` | PendingCatalog и независимая очередь студентов | Critical | Backlog | 009 | EducationSPD |
 | `SPD-011` | Конкурентность и запоздавшие события | Critical | Backlog | 009, 010 | EducationSPD |
 | `SPD-012` | Версионируемая конфигурация математической модели | Critical | Backlog | 001 | EducationSPD |
@@ -261,6 +261,16 @@ configuration и миграцию.
 - частично сохранённый эпизод невозможен;
 - неизвестный навык не теряет сообщение;
 - raw payload не попадает в Information-логи.
+
+**Выполнено 2026-11-07.** Общий durable Kafka consumer переиспользован для
+`learning.episode-finalized`: offset подтверждается только после записи raw JSON в
+inbox. Проверенный эпизод и все его наблюдения сохраняются в транзакции обработки
+inbox; повторная доставка идемпотентна, а другой `EventId` для существующей пары
+`ModuleKey + EpisodeId` получает безопасный `EpisodeConflict`. Событие с
+неизвестным навыком остаётся в `PendingCatalog` без частично сохранённого эпизода.
+Логи содержат только тип сообщения и идентификаторы, но не raw payload. Сквозной
+тест на реальных Kafka и PostgreSQL проверяет успешное применение, дубликат,
+конфликт и отсутствующий каталог.
 
 ### SPD-010 — PendingCatalog и независимая очередь студентов
 

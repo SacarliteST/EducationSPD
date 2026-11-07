@@ -1,6 +1,7 @@
 using EducationSPD.Application.Episodes;
 using EducationSPD.Application.Inbox;
 using EducationSPD.Application.Skills;
+using EducationSPD.Application.Models;
 using EducationSPD.Infrastructure.Configuration;
 using EducationSPD.Infrastructure.Episodes;
 using EducationSPD.Infrastructure.Inbox;
@@ -8,6 +9,7 @@ using EducationSPD.Infrastructure.Kafka;
 using EducationSPD.Infrastructure.Persistence;
 using EducationSPD.Infrastructure.Persistence.Migrations;
 using EducationSPD.Infrastructure.Skills;
+using EducationSPD.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -68,6 +70,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IInboxBatchExecutor, EfInboxBatchExecutor>();
         services.AddScoped<IPendingCatalogNotifier, EfPendingCatalogNotifier>();
         services.AddScoped<ISkillRepository, EfSkillRepository>();
+        services.AddScoped<IModelVersionRepository, EfModelVersionRepository>();
         services.AddHostedService<SkillCatalogKafkaConsumer>();
         services.AddHostedService<SkillCatalogInboxProcessor>();
         services.AddHostedService<LearningEpisodeKafkaConsumer>();

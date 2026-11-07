@@ -181,6 +181,101 @@ namespace EducationSPD.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EducationSPD.Domain.Models.ModelVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("ActivatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("activated_at");
+
+                    b.Property<DateTimeOffset?>("ArchivedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("archived_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<decimal>("InitialMasteryProbability")
+                        .HasPrecision(10, 9)
+                        .HasColumnType("numeric(10,9)")
+                        .HasColumnName("initial_mastery_probability");
+
+                    b.Property<decimal>("LearnProbability")
+                        .HasPrecision(10, 9)
+                        .HasColumnType("numeric(10,9)")
+                        .HasColumnName("learn_probability");
+
+                    b.Property<DateTimeOffset?>("RecalculationStartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("recalculation_started_at");
+
+                    b.Property<short>("Status")
+                        .HasColumnType("smallint")
+                        .HasColumnName("status");
+
+                    b.Property<decimal>("TaskTagGuessProbability")
+                        .HasPrecision(10, 9)
+                        .HasColumnType("numeric(10,9)")
+                        .HasColumnName("task_tag_guess_probability");
+
+                    b.Property<decimal>("TaskTagSlipProbability")
+                        .HasPrecision(10, 9)
+                        .HasColumnType("numeric(10,9)")
+                        .HasColumnName("task_tag_slip_probability");
+
+                    b.Property<decimal>("ValidationRuleGuessProbability")
+                        .HasPrecision(10, 9)
+                        .HasColumnType("numeric(10,9)")
+                        .HasColumnName("validation_rule_guess_probability");
+
+                    b.Property<decimal>("ValidationRuleSlipProbability")
+                        .HasPrecision(10, 9)
+                        .HasColumnType("numeric(10,9)")
+                        .HasColumnName("validation_rule_slip_probability");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.PrimitiveCollection<decimal[]>("ahpMatrix")
+                        .IsRequired()
+                        .HasColumnType("numeric[]")
+                        .HasColumnName("ahp_matrix");
+
+                    b.PrimitiveCollection<decimal[]>("ahpWeights")
+                        .IsRequired()
+                        .HasColumnType("numeric[]")
+                        .HasColumnName("ahp_weights");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ModelVersions_Active")
+                        .HasFilter("status = 3");
+
+                    b.HasIndex("Version")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ModelVersions_Version");
+
+                    b.ToTable("ModelVersions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ModelVersions_AhpMatrixSize", "cardinality(ahp_matrix) = 16");
+
+                            t.HasCheckConstraint("CK_ModelVersions_AhpWeightsSize", "cardinality(ahp_weights) = 4");
+
+                            t.HasCheckConstraint("CK_ModelVersions_Probabilities", "initial_mastery_probability BETWEEN 0 AND 1 AND learn_probability BETWEEN 0 AND 1 AND validation_rule_guess_probability BETWEEN 0 AND 1 AND validation_rule_slip_probability BETWEEN 0 AND 1 AND task_tag_guess_probability BETWEEN 0 AND 1 AND task_tag_slip_probability BETWEEN 0 AND 1 AND validation_rule_guess_probability + validation_rule_slip_probability < 1 AND task_tag_guess_probability + task_tag_slip_probability < 1 AND validation_rule_guess_probability <= task_tag_guess_probability AND validation_rule_slip_probability <= task_tag_slip_probability");
+
+                            t.HasCheckConstraint("CK_ModelVersions_Status", "status IN (1, 2, 3, 4)");
+
+                            t.HasCheckConstraint("CK_ModelVersions_Version", "version > 0");
+                        });
+                });
+
             modelBuilder.Entity("EducationSPD.Domain.Skills.Skill", b =>
                 {
                     b.Property<Guid>("Id")

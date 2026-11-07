@@ -1,6 +1,7 @@
 using EducationSPD.Domain.Inbox;
 using EducationSPD.Domain.Episodes;
 using EducationSPD.Domain.Skills;
+using EducationSPD.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace EducationSPD.Infrastructure.Persistence;
@@ -28,6 +29,9 @@ public sealed class AppDbContext : DbContext
 
     /// <summary>Бинарные наблюдения навыков завершённых эпизодов.</summary>
     public DbSet<SkillObservation> SkillObservations => Set<SkillObservation>();
+
+    /// <summary>Версии математической модели.</summary>
+    public DbSet<ModelVersion> ModelVersions => Set<ModelVersion>();
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -1,3 +1,5 @@
+using EducationSPD.Domain.Models;
+
 namespace EducationSPD.Infrastructure.Configuration;
 
 /// <summary>
@@ -31,25 +33,22 @@ public sealed class ModelOptions
 
     internal static bool IsValid(ModelOptions options)
     {
-        return IsProbability(options.InitialMasteryProbability)
-            && IsProbability(options.LearnProbability)
-            && IsReliableObservation(
+        try
+        {
+            _ = new ModelParameters(
+                options.InitialMasteryProbability,
+                options.LearnProbability,
                 options.ValidationRuleGuessProbability,
-                options.ValidationRuleSlipProbability)
-            && IsReliableObservation(
+                options.ValidationRuleSlipProbability,
                 options.TaskTagGuessProbability,
-                options.TaskTagSlipProbability)
-            && options.ValidationRuleGuessProbability <= options.TaskTagGuessProbability
-            && options.ValidationRuleSlipProbability <= options.TaskTagSlipProbability
-            && IsFourByFourPositiveMatrix(options.AhpMatrix);
+                options.TaskTagSlipProbability,
+                options.AhpMatrix.SelectMany(row => row).ToArray());
+            return options.AhpMatrix.Length == ModelParameters.AhpMatrixSize
+                && options.AhpMatrix.All(row => row.Length == ModelParameters.AhpMatrixSize);
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
     }
-
-    private static bool IsProbability(decimal value) => value is >= 0 and <= 1;
-
-    private static bool IsReliableObservation(decimal guess, decimal slip) =>
-        IsProbability(guess) && IsProbability(slip) && guess + slip < 1;
-
-    private static bool IsFourByFourPositiveMatrix(decimal[][] matrix) =>
-        matrix.Length == 4
-        && matrix.All(row => row.Length == 4 && row.All(value => value > 0));
 }

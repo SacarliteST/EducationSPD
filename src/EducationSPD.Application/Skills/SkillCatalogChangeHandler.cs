@@ -5,7 +5,7 @@ namespace EducationSPD.Application.Skills;
 internal sealed class SkillCatalogChangeHandler(ISkillRepository repository)
     : ISkillCatalogChangeHandler
 {
-    public async Task ApplyAsync(
+    public async Task<bool> ApplyAsync(
         SkillCatalogChange change,
         CancellationToken cancellationToken)
     {
@@ -27,18 +27,18 @@ internal sealed class SkillCatalogChangeHandler(ISkillRepository repository)
                 change.OccurredAt,
                 change.EventId);
             await repository.AddAsync(skill, cancellationToken);
-        }
-        else
-        {
-            skill.ApplyChange(
-                change.Name,
-                change.Description,
-                change.Origin,
-                change.IsDeleted,
-                change.OccurredAt,
-                change.EventId);
+            await repository.SaveChangesAsync(cancellationToken);
+            return true;
         }
 
+        var changed = skill.ApplyChange(
+            change.Name,
+            change.Description,
+            change.Origin,
+            change.IsDeleted,
+            change.OccurredAt,
+            change.EventId);
         await repository.SaveChangesAsync(cancellationToken);
+        return changed;
     }
 }

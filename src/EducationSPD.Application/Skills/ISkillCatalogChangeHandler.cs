@@ -4,5 +4,5 @@ namespace EducationSPD.Application.Skills;
 public interface ISkillCatalogChangeHandler
 {
     /// <summary>Применяет состояние, если событие новее сохранённого.</summary>
-    Task ApplyAsync(SkillCatalogChange change, CancellationToken cancellationToken);
+    Task<bool> ApplyAsync(SkillCatalogChange change, CancellationToken cancellationToken);
 }

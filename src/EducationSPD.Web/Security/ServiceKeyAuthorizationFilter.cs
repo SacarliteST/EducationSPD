@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 
 namespace EducationSPD.Web.Security;
 
@@ -14,13 +15,17 @@ internal sealed class ServiceKeyAuthorizationFilter : IAsyncAuthorizationFilter
 {
     internal const string HeaderName = "X-Service-Key";
     private readonly ServiceAuthenticationOptions options;
+    private readonly ILogger<ServiceKeyAuthorizationFilter> logger;
 
     /// <summary>
     /// Создаёт фильтр сервисной авторизации.
     /// </summary>
-    public ServiceKeyAuthorizationFilter(IOptions<ServiceAuthenticationOptions> options)
+    public ServiceKeyAuthorizationFilter(
+        IOptions<ServiceAuthenticationOptions> options,
+        ILogger<ServiceKeyAuthorizationFilter> logger)
     {
         this.options = options.Value;
+        this.logger = logger;
     }
 
     /// <inheritdoc />
@@ -34,6 +39,7 @@ internal sealed class ServiceKeyAuthorizationFilter : IAsyncAuthorizationFilter
         if (!context.HttpContext.Request.Headers.TryGetValue(HeaderName, out var values)
             || string.IsNullOrWhiteSpace(values.FirstOrDefault()))
         {
+            logger.LogWarning("Внешний HTTP-вызов отклонён: сервисный ключ отсутствует");
             context.Result = CreateProblem(
                 StatusCodes.Status401Unauthorized,
                 "Требуется аутентификация сервиса",
@@ -44,6 +50,7 @@ internal sealed class ServiceKeyAuthorizationFilter : IAsyncAuthorizationFilter
 
         if (!KeysMatch(values.First()!, options.ServiceKey))
         {
+            logger.LogWarning("Внешний HTTP-вызов отклонён: сервисный ключ неверен");
             context.Result = CreateProblem(
                 StatusCodes.Status403Forbidden,
                 "Доступ запрещён",

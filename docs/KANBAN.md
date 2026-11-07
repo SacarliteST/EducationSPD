@@ -66,7 +66,7 @@ SPD-021 ─► SQLSPD-001 ─► SQLSPD-002 ─► SQLSPD-003 ─► SQLSPD-004 
 | `SPD-017` | Доменный сервис ранжирования | Critical | Done | 014, 016 | EducationSPD |
 | `SPD-018` | API ранжирования кандидатов | Critical | Done | 002, 003, 017 | EducationSPD |
 | `SPD-019` | Полный пересчёт версии модели | High | Done | 014, 016 | EducationSPD |
-| `SPD-020` | Health, retry, метрики и безопасные логи | High | Backlog | 007, 010, 018, 019 | EducationSPD |
+| `SPD-020` | Health, retry, метрики и безопасные логи | High | Done | 007, 010, 018, 019 | EducationSPD |
 | `SPD-021` | OpenAPI и интеграционная документация | Critical | Backlog | 015, 018, 020 | EducationSPD |
 | `SPD-022` | Производительность и финальная приёмка MVP | Critical | Backlog | 021 | EducationSPD |
 | `SQLSPD-001` | Каталог навыков SQL Module | Critical | Backlog | SPD-004, SPD-007 | SqlModule |
@@ -516,6 +516,19 @@ OpenAPI metadata.
 - метрики различают `Applied/PendingCatalog/Failed`;
 - логи не содержат service key, raw payload и персональные данные;
 - HTTP и Kafka поддерживают trace correlation.
+
+**Выполнено 2026-11-08.** Добавлены раздельные `/health/live` и
+`/health/ready`: readiness проверяет соединение с PostgreSQL, отсутствие
+неприменённых миграций и успешную инициализацию обоих Kafka consumers; ошибка
+broker переводит состояние обратно в unhealthy, не останавливая HTTP. Технические
+ошибки inbox получают ограниченный экспоненциальный retry и после лимита
+переходят в `Failed`, тогда как ошибки контракта и бизнес-конфликты завершаются
+сразу. Добавлены Meter-инструменты из ТЗ и отдельная метрика переходов
+`Applied/PendingCatalog/Failed`, W3C trace context для HTTP и чтение
+`traceparent`/`tracestate` из Kafka headers. Русские структурированные логи
+покрывают жизненный цикл consumer, результаты inbox, пересчёт, ранжирование и
+отказы аутентификации; service key, raw payload и идентификатор студента в них не
+попадают, а `EventId`/`EpisodeId` передаются через logging scope.
 
 ### SPD-021 — OpenAPI и интеграционная документация
 

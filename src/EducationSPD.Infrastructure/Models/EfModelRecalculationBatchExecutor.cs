@@ -1,4 +1,5 @@
 using EducationSPD.Application.Episodes;
+using EducationSPD.Application.Diagnostics;
 using EducationSPD.Application.Models;
 using EducationSPD.Domain.Models;
 using EducationSPD.Infrastructure.Configuration;
@@ -78,6 +79,7 @@ internal sealed class EfModelRecalculationBatchExecutor : IModelRecalculationBat
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        EducationSpdTelemetry.RecordModelRecalculationProgress(pairs.Count);
         logger.LogInformation(
             "Пересчитана порция версии модели {ModelVersion}: {PairCount} пар студент-модуль",
             model.Version,
@@ -192,5 +194,6 @@ internal sealed class EfModelRecalculationBatchExecutor : IModelRecalculationBat
             "Завершён пересчёт и активирована версия модели {ModelVersion}; предыдущая версия {PreviousVersion} архивирована",
             model.Version,
             activeModel.Version);
+        EducationSpdTelemetry.RecordProjectionRecalculation("model_activated");
     }
 }

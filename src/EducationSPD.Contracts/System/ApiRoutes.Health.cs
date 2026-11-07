@@ -11,5 +11,11 @@ public static partial class ApiRoutes
         /// Проверка доступности HTTP-процесса.
         /// </summary>
         public const string Status = "health";
+
+        /// <summary>Проверка жизнеспособности HTTP-процесса.</summary>
+        public const string Live = "health/live";
+
+        /// <summary>Проверка готовности инфраструктурных зависимостей.</summary>
+        public const string Ready = "health/ready";
     }
 }

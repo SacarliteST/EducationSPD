@@ -1,4 +1,5 @@
 using EducationSPD.Application.Models;
+using EducationSPD.Application.Diagnostics;
 using EducationSPD.Infrastructure.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -39,6 +40,7 @@ internal sealed class ModelRecalculationProcessor : BackgroundService
             }
             catch (Exception exception)
             {
+                EducationSpdTelemetry.RecordProjectionRecalculation("failed");
                 logger.LogError(exception, "Ошибка фонового пересчёта математической модели");
             }
 

@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Diagnostics;
+using EducationSPD.Application.Diagnostics;
 using EducationSPD.Application.Episodes;
 using EducationSPD.Application.Inbox;
 using EducationSPD.Domain.Episodes;
@@ -91,31 +93,43 @@ internal sealed class LearningEpisodeInboxProcessor(
             return;
         }
 
+        using var logScope = logger.BeginScope(new Dictionary<string, object?>
+        {
+            ["EventId"] = message.EventId,
+            ["EpisodeId"] = message.EpisodeId
+        });
+        var startedAt = Stopwatch.GetTimestamp();
         var result = await handler.ApplyAsync(Map(message), cancellationToken);
+        EducationSpdTelemetry.RecordEpisodeDuration(Stopwatch.GetElapsedTime(startedAt));
         switch (result)
         {
             case LearningEpisodeApplyResult.Applied:
             case LearningEpisodeApplyResult.Duplicate:
                 inboxMessage.MarkApplied(timeProvider.GetUtcNow());
+                logger.LogInformation(
+                    result == LearningEpisodeApplyResult.Applied
+                        ? "Учебный эпизод применён"
+                        : "Повторное событие учебного эпизода проигнорировано");
+                EducationSpdTelemetry.RecordProjectionRecalculation(
+                    result == LearningEpisodeApplyResult.Applied ? "applied" : "duplicate");
                 break;
             case LearningEpisodeApplyResult.Conflict:
                 inboxMessage.MarkFailed("EpisodeConflict", timeProvider.GetUtcNow());
+                logger.LogWarning("Обнаружен конфликт учебного эпизода");
                 break;
             case LearningEpisodeApplyResult.MissingCatalog:
                 if (inboxMessage.RetryCount >= kafkaOptions.MaxRetryAttempts - 1)
                 {
                     inboxMessage.MarkFailed("CatalogRetryLimitExceeded", timeProvider.GetUtcNow());
                     logger.LogWarning(
-                        "Эпизод {EventId} отклонён после исчерпания повторов ожидания каталога",
-                        inboxMessage.EventId);
+                        "Учебный эпизод отклонён после исчерпания повторов ожидания каталога");
                 }
                 else
                 {
                     inboxMessage.WaitForCatalog(
                         timeProvider.GetUtcNow().AddSeconds(options.PendingCatalogRetryIntervalSeconds));
                     logger.LogInformation(
-                        "Эпизод {EventId} ожидает обновления каталога навыков",
-                        inboxMessage.EventId);
+                        "Учебный эпизод ожидает обновления каталога навыков");
                 }
 
                 break;

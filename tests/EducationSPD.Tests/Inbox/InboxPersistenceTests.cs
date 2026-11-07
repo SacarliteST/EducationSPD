@@ -6,6 +6,7 @@ using EducationSPD.Infrastructure.Inbox;
 using EducationSPD.Tests.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace EducationSPD.Tests.Inbox;
 
@@ -98,6 +99,47 @@ public sealed class InboxPersistenceTests(PostgresDatabaseFixture database)
                 message => message.Status == InboxStatus.Applied));
     }
 
+    [Fact]
+    public async Task TechnicalFailure_UsesBackoffAndBecomesFailedAfterConfiguredLimit()
+    {
+        await database.ResetInboxAsync();
+        var eventId = Guid.NewGuid();
+        await StoreAsync(eventId, "{\"schemaVersion\":1}");
+
+        await using (var firstContext = database.CreateDbContext())
+        {
+            var executor = CreateExecutor(firstContext, 1, 2, 1);
+            await executor.ExecuteReadyBatchAsync(
+                InboxMessageType.SkillCatalogChanged,
+                (_, _) => throw new InvalidOperationException("Временная ошибка"),
+                CancellationToken.None);
+        }
+
+        await using (var retryContext = database.CreateDbContext())
+        {
+            var scheduled = await retryContext.InboxMessages.AsNoTracking().SingleAsync();
+            Assert.Equal(InboxStatus.Received, scheduled.Status);
+            Assert.Equal(1, scheduled.RetryCount);
+            Assert.NotNull(scheduled.NextRetryAt);
+        }
+
+        await Task.Delay(20);
+        await using (var secondContext = database.CreateDbContext())
+        {
+            var executor = CreateExecutor(secondContext, 1, 2, 1);
+            await executor.ExecuteReadyBatchAsync(
+                InboxMessageType.SkillCatalogChanged,
+                (_, _) => throw new InvalidOperationException("Повторная временная ошибка"),
+                CancellationToken.None);
+        }
+
+        await using var verificationContext = database.CreateDbContext();
+        var failed = await verificationContext.InboxMessages.AsNoTracking().SingleAsync();
+        Assert.Equal(InboxStatus.Failed, failed.Status);
+        Assert.Equal("TechnicalRetryLimitExceeded", failed.ErrorCode);
+        Assert.Null(failed.NextRetryAt);
+    }
+
     private async Task<InboxWriteResult> StoreAsync(Guid eventId, string payload)
     {
         await using var dbContext = database.CreateDbContext();
@@ -114,7 +156,9 @@ public sealed class InboxPersistenceTests(PostgresDatabaseFixture database)
 
     private static EfInboxBatchExecutor CreateExecutor(
         EducationSPD.Infrastructure.Persistence.AppDbContext dbContext,
-        int batchSize)
+        int batchSize,
+        int maxRetryAttempts = 3,
+        int initialRetryDelayMilliseconds = 10)
     {
         var options = Options.Create(new InboxOptions
         {
@@ -122,7 +166,22 @@ public sealed class InboxPersistenceTests(PostgresDatabaseFixture database)
             PendingCatalogRetryIntervalSeconds = 30
         });
 
-        return new EfInboxBatchExecutor(dbContext, options, TimeProvider.System);
+        var kafkaOptions = Options.Create(new KafkaOptions
+        {
+            BootstrapServers = "unused",
+            ConsumerGroup = "tests",
+            SkillCatalogTopic = "catalog",
+            EpisodeFinalizedTopic = "episodes",
+            MaxRetryAttempts = maxRetryAttempts,
+            InitialRetryDelayMilliseconds = initialRetryDelayMilliseconds
+        });
+
+        return new EfInboxBatchExecutor(
+            dbContext,
+            options,
+            kafkaOptions,
+            TimeProvider.System,
+            NullLogger<EfInboxBatchExecutor>.Instance);
     }
 
     private static void MarkApplied(IReadOnlyList<InboxMessage> messages)

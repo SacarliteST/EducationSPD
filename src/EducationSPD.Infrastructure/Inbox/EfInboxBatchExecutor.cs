@@ -1,9 +1,11 @@
+using EducationSPD.Application.Diagnostics;
 using EducationSPD.Application.Inbox;
 using EducationSPD.Domain.Inbox;
 using EducationSPD.Infrastructure.Configuration;
 using EducationSPD.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 
 namespace EducationSPD.Infrastructure.Inbox;
 
@@ -11,16 +13,22 @@ internal sealed class EfInboxBatchExecutor : IInboxBatchExecutor
 {
     private readonly AppDbContext dbContext;
     private readonly InboxOptions options;
+    private readonly KafkaOptions kafkaOptions;
     private readonly TimeProvider timeProvider;
+    private readonly ILogger<EfInboxBatchExecutor> logger;
 
     public EfInboxBatchExecutor(
         AppDbContext dbContext,
         IOptions<InboxOptions> options,
-        TimeProvider timeProvider)
+        IOptions<KafkaOptions> kafkaOptions,
+        TimeProvider timeProvider,
+        ILogger<EfInboxBatchExecutor> logger)
     {
         this.dbContext = dbContext;
         this.options = options.Value;
+        this.kafkaOptions = kafkaOptions.Value;
         this.timeProvider = timeProvider;
+        this.logger = logger;
     }
 
     public async Task<int> ExecuteReadyBatchAsync(
@@ -54,10 +62,94 @@ internal sealed class EfInboxBatchExecutor : IInboxBatchExecutor
             return 0;
         }
 
-        await processBatch(messages, cancellationToken);
+        var previousStatuses = messages.ToDictionary(message => message.EventId, message => message.Status);
+        try
+        {
+            await processBatch(messages, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            RecordStatusChanges(messages, previousStatuses);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            logger.LogWarning(
+                exception,
+                "Техническая ошибка обработки {MessageCount} сообщений inbox; запланирован ограниченный повтор",
+                messages.Count);
+            await transaction.RollbackAsync(cancellationToken);
+            dbContext.ChangeTracker.Clear();
+            await ScheduleTechnicalRetryAsync(
+                messages.Select(message => message.EventId).ToArray(),
+                cancellationToken);
+        }
+
+        return messages.Count;
+    }
+
+    private async Task ScheduleTechnicalRetryAsync(
+        IReadOnlyCollection<Guid> eventIds,
+        CancellationToken cancellationToken)
+    {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        var messages = await dbContext.InboxMessages
+            .Where(message => eventIds.Contains(message.EventId)
+                && (message.Status == InboxStatus.Received || message.Status == InboxStatus.PendingCatalog))
+            .ToListAsync(cancellationToken);
+        var now = timeProvider.GetUtcNow();
+
+        foreach (var message in messages)
+        {
+            if (message.RetryCount >= kafkaOptions.MaxRetryAttempts - 1)
+            {
+                if (message.Status == InboxStatus.PendingCatalog)
+                {
+                    EducationSpdTelemetry.LeavePendingCatalog();
+                }
+
+                message.MarkFailed("TechnicalRetryLimitExceeded", now);
+                EducationSpdTelemetry.RecordFailedInbox("TechnicalRetryLimitExceeded");
+                EducationSpdTelemetry.RecordInboxStatus(nameof(InboxStatus.Failed));
+                logger.LogWarning("Сообщение inbox окончательно отклонено после исчерпания технических повторов");
+                continue;
+            }
+
+            var exponent = Math.Min(message.RetryCount, kafkaOptions.MaxRetryAttempts - 1);
+            var delay = TimeSpan.FromMilliseconds(
+                kafkaOptions.InitialRetryDelayMilliseconds * Math.Pow(2, exponent));
+            message.ScheduleRetry(now.Add(delay));
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        return messages.Count;
+    }
+
+    private static void RecordStatusChanges(
+        IEnumerable<InboxMessage> messages,
+        IReadOnlyDictionary<Guid, InboxStatus> previousStatuses)
+    {
+        foreach (var message in messages)
+        {
+            var previousStatus = previousStatuses[message.EventId];
+            if (previousStatus != InboxStatus.PendingCatalog && message.Status == InboxStatus.PendingCatalog)
+            {
+                EducationSpdTelemetry.EnterPendingCatalog();
+            }
+            else if (previousStatus == InboxStatus.PendingCatalog && message.Status != InboxStatus.PendingCatalog)
+            {
+                EducationSpdTelemetry.LeavePendingCatalog();
+            }
+
+            if (message.Status == InboxStatus.Failed && message.ErrorCode is not null)
+            {
+                EducationSpdTelemetry.RecordFailedInbox(message.ErrorCode);
+            }
+
+            if (previousStatus != message.Status
+                && message.Status is InboxStatus.Applied or InboxStatus.PendingCatalog or InboxStatus.Failed)
+            {
+                EducationSpdTelemetry.RecordInboxStatus(message.Status.ToString());
+            }
+        }
     }
 
     private Task<List<InboxMessage>> LoadRegularBatchAsync(

@@ -1,10 +1,12 @@
 using EducationSPD.Application.Episodes;
 using EducationSPD.Application.Inbox;
 using EducationSPD.Application.Skills;
+using EducationSPD.Application.System;
 using EducationSPD.Application.Models;
 using EducationSPD.Infrastructure.Configuration;
 using EducationSPD.Infrastructure.Episodes;
 using EducationSPD.Infrastructure.Inbox;
+using EducationSPD.Infrastructure.Health;
 using EducationSPD.Infrastructure.Kafka;
 using EducationSPD.Infrastructure.Persistence;
 using EducationSPD.Infrastructure.Persistence.Migrations;
@@ -81,6 +83,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStudentSkillStateRepository, EfStudentSkillStateRepository>();
         services.AddScoped<IStudentSkillStateReader, EfStudentSkillStateReader>();
         services.AddScoped<IRecommendationContextReader, EfRecommendationContextReader>();
+        services.AddScoped<IServiceReadinessProbe, ServiceReadinessProbe>();
+        services.AddSingleton<KafkaConsumerReadiness>();
         services.AddScoped<IModelRecalculationBatchExecutor, EfModelRecalculationBatchExecutor>();
         services.AddHostedService<SkillCatalogKafkaConsumer>();
         services.AddHostedService<SkillCatalogInboxProcessor>();

@@ -91,7 +91,11 @@ internal sealed class SkillCatalogInboxProcessor(
             return;
         }
 
-        await handler.ApplyAsync(
+        using var logScope = logger.BeginScope(new Dictionary<string, object?>
+        {
+            ["EventId"] = message.EventId
+        });
+        var changed = await handler.ApplyAsync(
             new SkillCatalogChange(
                 message.EventId,
                 message.ModuleKey,
@@ -107,6 +111,10 @@ internal sealed class SkillCatalogInboxProcessor(
             message.SkillId,
             cancellationToken);
         inboxMessage.MarkApplied(timeProvider.GetUtcNow());
+        logger.LogInformation(
+            changed
+                ? "Событие каталога навыков применено"
+                : "Повторное или устаревшее событие каталога навыков проигнорировано");
     }
 
     private static EducationSPD.Domain.Skills.SkillOrigin MapOrigin(

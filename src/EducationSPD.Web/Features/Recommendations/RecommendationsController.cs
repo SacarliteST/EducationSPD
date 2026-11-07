@@ -1,8 +1,11 @@
+using System.Diagnostics;
+using EducationSPD.Application.Diagnostics;
 using EducationSPD.Application.Recommendations;
 using EducationSPD.Contracts;
 using EducationSPD.Contracts.Recommendations;
 using EducationSPD.Domain.Episodes;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace EducationSPD.Web.Features.Recommendations;
 
@@ -11,11 +14,15 @@ namespace EducationSPD.Web.Features.Recommendations;
 public sealed class RecommendationsController : ControllerBase
 {
     private readonly IRecommendationRankingHandler rankingHandler;
+    private readonly ILogger<RecommendationsController> logger;
 
     /// <summary>Создаёт контроллер рекомендаций.</summary>
-    public RecommendationsController(IRecommendationRankingHandler rankingHandler)
+    public RecommendationsController(
+        IRecommendationRankingHandler rankingHandler,
+        ILogger<RecommendationsController> logger)
     {
         this.rankingHandler = rankingHandler;
+        this.logger = logger;
     }
 
     /// <summary>Возвращает персональный порядок всех входных кандидатов.</summary>
@@ -29,6 +36,7 @@ public sealed class RecommendationsController : ControllerBase
         [FromBody] RankRecommendationsRequest request,
         CancellationToken cancellationToken)
     {
+        var startedAt = Stopwatch.GetTimestamp();
         var input = new RankRecommendationsInput(
             request.StudentId!.Value,
             request.ModuleKey!,
@@ -38,7 +46,25 @@ public sealed class RecommendationsController : ControllerBase
                 candidate.Skills!.Select(skill => new RecommendationSkillInput(
                     skill.SkillId!,
                     (SkillObservationSource)skill.Source!.Value)).ToArray())).ToArray());
-        var result = await rankingHandler.RankAsync(input, cancellationToken);
+        RecommendationRankingPage result;
+        try
+        {
+            result = await rankingHandler.RankAsync(input, cancellationToken);
+        }
+        catch
+        {
+            EducationSpdTelemetry.RecordRecommendation(
+                "failed",
+                Stopwatch.GetElapsedTime(startedAt),
+                input.Candidates.Count);
+            throw;
+        }
+        var duration = Stopwatch.GetElapsedTime(startedAt);
+        EducationSpdTelemetry.RecordRecommendation("success", duration, input.Candidates.Count);
+        logger.LogInformation(
+            "HTTP-ранжирование завершено: {CandidateCount} кандидатов за {ElapsedMilliseconds} мс",
+            input.Candidates.Count,
+            duration.TotalMilliseconds);
         return Ok(new RankRecommendationsResponse(
             result.ModelVersion,
             result.Items.Select(item => new RankedCandidateResponse(

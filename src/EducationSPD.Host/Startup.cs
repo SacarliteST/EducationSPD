@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using EducationSPD.Application;
 using EducationSPD.Infrastructure;
 using EducationSPD.Infrastructure.Configuration;
@@ -15,6 +16,8 @@ internal static class Startup
 
     public static void ConfigureServices(WebApplicationBuilder builder)
     {
+        Activity.DefaultIdFormat = ActivityIdFormat.W3C;
+        Activity.ForceDefaultIdFormat = true;
         var services = builder.Services;
 
         services.AddHttpLogging(options =>
